@@ -68,7 +68,7 @@ class Tracking(db.Model):
     def __repr__(self):
         """Provides helpful Tracking object representation when printed"""
 
-        return "<TRACKING OBJ tracking_id: %s visited: %s>" % (self.tracking_id, self.visited)
+        return "<TRACKING OBJ tracking_id: %s rest_id: %s user_id: %s visited: %s>" % (self.tracking_id, self.rest_id, self.user_id, self.visited)
 
 class Friend(db.Model):
 
@@ -80,8 +80,8 @@ class Friend(db.Model):
     status = db.Column(db.Integer, db.ForeignKey('statuses.status_id'), nullable=True)
     fcreated_at = db.Column(db.DateTime, default=datetime.utcnow(), nullable=True)
 
-    user = db.relationship("User", backref="friends")
-    status = db.relationship("Status", backref="friends")
+    # user = db.relationship("User", backref="friends")
+    stat = db.relationship("Status", backref="friends")
 
     def __repr__(self):
         """Provides helpful Friend object representation when printed"""
