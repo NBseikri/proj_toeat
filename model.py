@@ -64,7 +64,6 @@ class Tracking(db.Model):
 
     user = db.relationship("User", backref="trackings")
     restaurant = db.relationship("Restaurant", backref="trackings")
-    # TODO Remove order_by tracking_id
 
     def __repr__(self):
         """Provides helpful Tracking object representation when printed"""
