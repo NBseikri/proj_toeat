@@ -24,7 +24,7 @@ class User(db.Model):
         return "<USER OBJ user_id: %s username: %s first_name: %s last_name: %s>" % (self.user_id, self.username, self.first_name, self.last_name)
 
 class Restaurant(db.Model):
-    """Restaurants added by a user based on Google Places Search and Places Details results."""
+    """Restaurant information from Google Places Search and Google Places Details results."""
 
     __tablename__ = "restaurants"
 

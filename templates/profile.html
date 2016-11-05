@@ -1,34 +1,58 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Welcome, {{ user.first_name }}!</h1>
+{% if 'user_id' in session and session['user_id'] != None %}
+    <h1>Welcome, {{ user.first_name }}!</h1>
+        <div class='add_rest'>
+            <h3>Add a Restaurant to your To-eat List</h3>
+                <form action="/profile/<user_id>" method="POST">
+                    <input type="hidden" value="hidden_info" name="user.user_id" />
+                    Search for a Restaurant! <input id="searchTextField" type="text" name="search"><br><br>
+                    <input type="submit" value="Add Restaurant"></form>
+                <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{ key }}&libraries=places"></script>
+                <script>
+                    var input = document.getElementById('searchTextField');
+                    var defaultBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(85, -180), 
+                        new google.maps.LatLng(-85, 180));
+                    var options = {
+                        bounds: defaultBounds,
+                        types: ['establishment']
+                    };
+                    var autocomplete = new google.maps.places.Autocomplete(input, options);
+                    autocomplete.addListener('place_changed', getDetails);
+                    function getDetails() {
+                        // Get the place details from the autocomplete object.
+                        var place = autocomplete.getPlace();
+                    }</script></div>
+        <div class='rest_details'>
+            <h3>Your To-eat List Restaurants</h3>
+            {% if user.trackings|length > 0 %}
+                {% for tracking in user.trackings %}
+                <div class='rest_photo'>
+                    <img src="https://static.pexels.com/photos/5317/food-salad-restaurant-person.jpg" width="100" height="100"></a></div>
+                <p>{{ tracking.restaurant.rest_name }}</p>
+                <p>{{ tracking.restaurant.address }}</p>
+                    {% if tracking.visited %}
+                        <p>You've visited this restaurant.</p>
+                    {% else %}
+                        <p>This restaurant is on your To-eat List.</p>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>You don't have any restaurants in your To-eat List.</p>
+            {% endif %}</div>
+        <div class='friend_details'>
+            <h3>Your To-eat List Friends</h3>
+            {% if friend_id_names|length > 0 %}
+                {% for friend in friend_id_names %}
+                    <a href="/public_profile/{{ friend[0] }}">{{ friend[1] }}</a><br>
+                {% endfor %}
+            {% else %}
+                <p>You don't have any To-eat List friends yet.</p>
+            {% endif %}</div>
+{% else %}
+    <a href="/login">Please login.</a>
+{% endif %}
 
-    <div class='rest_details'>
-        <h3>Your To-eat List Restaurants</h3>
-        {% if user.trackings|length > 0 %}
-            {% for tracking in user.trackings %}
-            <div class='rest_photo'>
-                <img src="https://static.pexels.com/photos/5317/food-salad-restaurant-person.jpg" width="100" height="100"></a>
-            </div>
-            <p>{{ tracking.restaurant.rest_name }}</p>
-            <p>{{ tracking.restaurant.address }}</p>
-                {% if tracking.visited %}
-                    <p>You've visited this restaurant.</p>
-                {% else %}
-                    <p>This restaurant is on your To-eat List.</p>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <p>You don't have any restaurants in your To-eat List.</p>
-        {% endif %}</div>
-    <div class='friend_details'>
-        <h3>Your To-eat List Friends</h3>
-        {% if friend_id_names|length > 0 %}
-            {% for friend in friend_id_names %}
-                <a href="/public_profile/{{ friend[0] }}">{{ friend[1] }}</a><br>
-            {% endfor %}
-        {% else %}
-            <p>You don't have any To-eat List friends yet.</p>
-        {% endif %}
-        </div>
 {% endblock %}

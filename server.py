@@ -5,6 +5,8 @@ from flask_debugtoolbar import DebugToolbarExtension
 from model import connect_to_db, db, User, Restaurant, Tracking, Friend, Status
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime
+import requests
+import decimal
 
 key = os.environ["G_PLACES_KEY"]
 
@@ -17,8 +19,11 @@ app.jinja_env.undefined = StrictUndefined
 @app.route('/')
 def homepage():
     """Renders homepage"""
-
-    return render_template('homepage.html')
+    if session['user_id'] != None:
+        user_id = session['user_id']
+        return redirect('/profile/{}'.format(user_id))
+    else:
+        return render_template('homepage.html')
 
 @app.route('/login', methods=['GET'])
 def display_login_form():
@@ -57,6 +62,13 @@ def process_login():
                 or go to our registration page to create a new account.""")
         return redirect('/login')
 
+@app.route('/logout')
+def process_logout():
+
+    session['user_id'] = None
+    flash("You've successfully logged out!")
+    return redirect('/')
+
 @app.route('/registration', methods=['GET'])
 def display_registration_form():
     """Displays registration form"""
@@ -94,14 +106,133 @@ def process_registration():
         flash('You have successfully created an account.')
         return redirect('/')
 
-@app.route('/profile/<user_id>')
+@app.route('/profile/<user_id>', methods=['GET'])
 def display_profile(user_id):
     """Displays user's profile page"""
 
     user = User.query.get(user_id)
     friend_id_names = find_friends(user_id)
 
-    return render_template('profile.html', user=user, friend_id_names=friend_id_names)
+    return render_template('profile.html', user=user, 
+                                        friend_id_names=friend_id_names,
+                                        key=key)
+
+@app.route('/profile/<user_id>', methods=['POST'])
+def process_add_rest(user_id):
+    """Adds a restaurant to a user's To-eat List"""
+
+    search_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
+    details_url = 'https://maps.googleapis.com/maps/api/place/details/json'
+
+    # Google Places Search payload
+    payload = {
+        'key': key,
+        'query': request.form.get('search')
+    }
+
+    search_req = requests.get(search_url, params=payload)
+    search_json = search_req.json()
+    results = search_json['results']
+
+    # Accessing just the results dictionary from the results
+    results_dict = results[0]
+    
+    # Restaurant name from search
+    rest_name = results_dict['name']
+    if rest_name is None:
+        rest_name = None
+
+    # Address from search
+    address = results_dict['formatted_address']
+    if address is None:
+        address = None
+
+    # Lat from search 
+    lat = results_dict['geometry']['location']['lat']
+    if lat is None:
+        lat = None
+
+    # Lng from search
+    lng = results_dict['geometry']['location']['lng']
+    if lng is None:
+        lng = None
+
+    # Photo URL from search
+    photos = results_dict['photos']
+    if photos != []:
+        photo_dict = photos[0]
+        photo_url = photo_dict['html_attributions']
+        if photo_url is None or photo_url == []:
+            photo_url = None
+    else:
+        photo_url = None
+
+    # Place ID from search; needed for Google Places Details call below
+    placeid = results_dict['place_id']
+    if placeid is None or placeid == []:
+        placeid = None
+
+    # Price level from search
+    price_level = results_dict['price_level']
+    if price_level is None or price_level == []:
+        price_level = None
+
+    # Rating from search
+    rating = results_dict['rating']
+    if rating is None or rating == []:
+        rating = None
+
+    # Google Places Details payload using Place ID from Google Places Search 
+    id_payload = {
+        'key' : key,
+        'placeid' : placeid
+    }
+
+    details_req = requests.get(details_url, params=id_payload)
+    details_json = details_req.json()
+    d_results = details_json['result']
+
+    # City from details
+    city = d_results['address_components'][3]['long_name']
+    if city is not None:
+        print 'city is: ', city
+    else: 
+        print 'city is: ', None
+
+    # Business hours from details
+    bus_hours = d_results.get('weekday_text', None)
+    # Used .get() here because weekday_text appears to be the only Place Search
+    # result that isn't always a key in the dictionary
+    if bus_hours is not None:
+        print 'bus_hours: ', city
+    else: 
+        print 'bus_hours: ', None
+
+    # Reviews from details
+    reviews = d_results['reviews']
+    all_reviews = ""
+    if reviews is not None:
+        for review in reviews:
+            text = review.get('text', None)
+            if text is not None: 
+                enc_text = text.encode("utf-8")
+                all_reviews = all_reviews + enc_text + '|'
+            else:
+                print 'review is: ', None
+    else:
+        print 'review is: ', None
+    print all_reviews
+
+    user_id = session.get('user_id')
+    queried_rest = Restaurant.query.filter_by(rest_name=rest_name).all()
+
+    if queried_rest:
+        pass
+    else:
+        restaurant = Restaurant()
+
+    # return jsonify(details_json)
+    return 'Added!'
 
 @app.route('/public_profile/<user_id>')
 def display_public_profile(user_id):
