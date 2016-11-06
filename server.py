@@ -7,6 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime
 import requests
 import decimal
+from functions import get_rest_info
 
 key = os.environ["G_PLACES_KEY"]
 
@@ -112,127 +113,115 @@ def display_profile(user_id):
 
     user = User.query.get(user_id)
     friend_id_names = find_friends(user_id)
+    sugg_id_names = suggest_friends(user_id)
+    pend_id_names = pending_friends(user_id)
 
     return render_template('profile.html', user=user, 
-                                        friend_id_names=friend_id_names,
+                                        friend_id_names=friend_id_names, 
+                                        sugg_id_names=sugg_id_names,
+                                        pend_id_names=pend_id_names,
                                         key=key)
 
-@app.route('/profile/<user_id>', methods=['POST'])
-def process_add_rest(user_id):
-    """Adds a restaurant to a user's To-eat List"""
+# @app.route('/profile/<user_id>', methods=['POST'])
+# def process_add_rest(user_id):
+#     """Adds a restaurant to a user's To-eat List"""
 
-    search_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
-    details_url = 'https://maps.googleapis.com/maps/api/place/details/json'
+#     user_id = session['user_id']
+#     # Gets user_id from session
+#     query = request.form.get('search')
+#     query = query.split(',')
+#     # Gets autocompleted search from form
+#     tracking_note = request.form.get('tracking_note')
+#     # Gets tracking note from form
+#     info = get_rest_info(query)
+#     # Using separate function, gets all restaurant details from Google Places
+#     rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
+#     # Unpacks all information into separate variables for use in db insertions below
+#     current_time = datetime.now()
+#     # Current time for db insertions below
 
-    # Google Places Search payload
-    payload = {
-        'key': key,
-        'query': request.form.get('search')
-    }
+#     rests = Restaurant.query.all()
+#     # Returns list all restaurant objects
+#     # I previously had a query that searched on the name of the queried restaurant
+#     # but it threw an error when a restaurant was not in the db so I am now
+#     # iterating through a list of restuarant objects to avoid the error. 
+#     for r in rests:
+#         print r
+#         print r.rest_name
+#         print 'THIS IS THE REST_ID!!!!!!', r.rest_id
+#         print query[0]
+#         print r.rest_name == query[0]
+#         print '**************************'
+#         # Iterates through list and evaluates each restaurant object
+#         if r.rest_name == query[0]:
+#         # Checks to see if an existing restaurant name matches the queried restaurant
+#             print '====================='
+#             exists = check_existing_trackings(user_id, r.rest_id)
+#             print exists
+#             print '&&&&&&&&&&&&&&&&&&&'
+#             # When there is a match, checks whether user already has a tracking for
+#             # the queried restaurant
+#             print "The rest already exists in this tracking: ", exists
+#             if exists:
+#             # Handles if the user is already tracking the restaurant    
+#                 flash('This restaurant is already in your To-eat List.')
+#                 return redirect('/profile/{}'.format(user_id))
+#                 # TODO: BUILD FEATURE TO UPDATE TRACKING
+#             else:
+#             # Handles when the user is not already tracking a restaurant in the db
+#                 tracking = Tracking(user_id=user_id,
+#                                         rest_id=r.rest_id,
+#                                         visited=False,
+#                                         tracking_note=tracking_note,
+#                                         tracking_review=None,
+#                                         tcreated_at=current_time)
+#                 db.session.add(tracking)
+#                 db.session.commit()
+#                 # Adds tracking to db
+#                 flash('You have successfully added a restaurant.')
+#                 #return redirect('/profile/{}'.format(user_id))
+#         else:
+#             print 'ELSE**********************'
+#         # Handles a queried restaurant that is not already in the db 
+#             # restaurant = Restaurant(rest_name=rest_name, 
+#             #                         city=city, 
+#             #                         address=address, 
+#             #                         lat=lat, 
+#             #                         lng=lng, 
+#             #                         photo=photo, 
+#             #                         placeid=placeid, 
+#             #                         price=price, 
+#             #                         rating=rating, 
+#             #                         bus_hours=bus_hours, 
+#             #                         rest_review=rest_review,
+#             #                         rcreated_at=current_time)
+#             # # Creates a new restaurant object
+#             # # db.session.add(restaurant)
+#             # # db.session.commit()
+#             # new_rest_id = restaurant.rest_id
+#             # tracking = Tracking(user_id=user_id,
+#             #                 rest_id=new_rest_id,
+#             #                 visited=False,
+#             #                 tracking_note=tracking_note,
+#             #                 tracking_review=None,
+#             #                 tcreated_at=current_time)
+#             # # Creates new tracking object for the newly added restaurant 
+#             # # for the user
+#             # # db.session.add(tracking)
+#             # # db.session.commit()
+#             # flash('You have successfully added a restaurant.')
+#             #return redirect('/profile/{}'.format(user_id)) 
+#         return 'Hi'      
 
-    search_req = requests.get(search_url, params=payload)
-    search_json = search_req.json()
-    results = search_json['results']
+# @app.route('/add_friend/<user_id>', methods=['POST'])
+# def add_friend(user_id):
 
-    # Accessing just the results dictionary from the results
-    results_dict = results[0]
-    
-    # Restaurant name from search
-    rest_name = results_dict['name']
-    if rest_name is None:
-        rest_name = None
+#     user_id = session['user_id']
+#     other_friend = request.form.get('add')
+#     accept_new_friend(user_id, other_friend)
 
-    # Address from search
-    address = results_dict['formatted_address']
-    if address is None:
-        address = None
-
-    # Lat from search 
-    lat = results_dict['geometry']['location']['lat']
-    if lat is None:
-        lat = None
-
-    # Lng from search
-    lng = results_dict['geometry']['location']['lng']
-    if lng is None:
-        lng = None
-
-    # Photo URL from search
-    photos = results_dict['photos']
-    if photos != []:
-        photo_dict = photos[0]
-        photo_url = photo_dict['html_attributions']
-        if photo_url is None or photo_url == []:
-            photo_url = None
-    else:
-        photo_url = None
-
-    # Place ID from search; needed for Google Places Details call below
-    placeid = results_dict['place_id']
-    if placeid is None or placeid == []:
-        placeid = None
-
-    # Price level from search
-    price_level = results_dict['price_level']
-    if price_level is None or price_level == []:
-        price_level = None
-
-    # Rating from search
-    rating = results_dict['rating']
-    if rating is None or rating == []:
-        rating = None
-
-    # Google Places Details payload using Place ID from Google Places Search 
-    id_payload = {
-        'key' : key,
-        'placeid' : placeid
-    }
-
-    details_req = requests.get(details_url, params=id_payload)
-    details_json = details_req.json()
-    d_results = details_json['result']
-
-    # City from details
-    city = d_results['address_components'][3]['long_name']
-    if city is not None:
-        print 'city is: ', city
-    else: 
-        print 'city is: ', None
-
-    # Business hours from details
-    bus_hours = d_results.get('weekday_text', None)
-    # Used .get() here because weekday_text appears to be the only Place Search
-    # result that isn't always a key in the dictionary
-    if bus_hours is not None:
-        print 'bus_hours: ', city
-    else: 
-        print 'bus_hours: ', None
-
-    # Reviews from details
-    reviews = d_results['reviews']
-    all_reviews = ""
-    if reviews is not None:
-        for review in reviews:
-            text = review.get('text', None)
-            if text is not None: 
-                enc_text = text.encode("utf-8")
-                all_reviews = all_reviews + enc_text + '|'
-            else:
-                print 'review is: ', None
-    else:
-        print 'review is: ', None
-    print all_reviews
-
-    user_id = session.get('user_id')
-    queried_rest = Restaurant.query.filter_by(rest_name=rest_name).all()
-
-    if queried_rest:
-        pass
-    else:
-        restaurant = Restaurant()
-
-    # return jsonify(details_json)
-    return 'Added!'
+#     flash('This restaurant is already in your To-eat List.')
+#     return redirect('/profile/{}'.format(user_id))
 
 @app.route('/public_profile/<user_id>')
 def display_public_profile(user_id):
@@ -243,7 +232,7 @@ def display_public_profile(user_id):
 ###QUERIES BELOW###
 ###TODO: Move to separate file###
 def find_friends(user_id):
-    """Given a user_id, returns a list of tuples with a friend's full name and user_id"""
+    """Given a user_id, returns a list of tuples with a friend's user_id and full name"""
 
     all_friends = Friend.query.filter(Friend.status==2).all()
     
@@ -261,6 +250,74 @@ def find_friends(user_id):
         friend_id_names.append(id_and_name)
 
     return friend_id_names
+
+def suggest_friends(passed_user_id):
+    """Given a user_id, returns a list of tuples with a suggested friend's user_id and full name"""
+
+    all_friends = Friend.query.all()
+    
+    user_friends = []
+    for friend in all_friends:
+        if friend.friend_one == int(passed_user_id):
+            user_friends.append(friend.friend_two)
+        elif friend.friend_two == int(passed_user_id):
+            user_friends.append(friend.friend_one)
+
+    others = User.query.filter(User.user_id!=passed_user_id).all()
+
+    sugg_id_names = []
+    for other in others:
+        if other.user_id not in user_friends:
+            id_and_name = other.user_id, (other.first_name.encode('utf-8') + ' ' + other.last_name.encode('utf-8'))
+            sugg_id_names.append(id_and_name)
+
+    return sugg_id_names
+
+def pending_friends(user_id):
+    """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
+
+    all_friends = Friend.query.filter(Friend.status==1).all()
+    
+    user_friends = []
+    for friend in all_friends:
+        if friend.friend_one == int(user_id):
+            user_friends.append(friend.friend_two)
+        elif friend.friend_two == int(user_id):
+            user_friends.append(friend.friend_one)
+
+    friend_id_names = []
+    for fid in user_friends:
+        other_friend = User.query.get(fid)
+        id_and_name = fid, (other_friend.first_name.encode('utf-8') + ' ' + other_friend.last_name.encode('utf-8'))
+        friend_id_names.append(id_and_name)
+
+    return friend_id_names
+
+# def add_new_friend(passed_user_id, other_friend):
+
+#     current_time = datetime.now()
+    
+#     friend = Friend(friend_one=passed_user_id,
+#                         friend_two=other_friend,
+#                         status=1,
+#                         fcreated_at=current_time)
+#     db.session.add(friend)
+#     db.session.commit()
+
+# def accept_new_friend(passed_user_id, other_friend):
+
+
+def check_existing_trackings(passed_user_id, passed_rest_id):
+    """Returns true or false if a user is already tracking a specific restaurant"""
+
+    all_trackings = Tracking.query.filter(Tracking.user_id==passed_user_id).all()
+
+    for tracking in all_trackings:
+        print tracking.rest_id, passed_rest_id
+        if tracking.rest_id == passed_rest_id:
+            return True
+        else:
+            return False
 
 if __name__ == "__main__":
 

@@ -3,14 +3,17 @@
 
 {% if 'user_id' in session and session['user_id'] != None %}
     <h1>Welcome, {{ user.first_name }}!</h1>
-        <div class='add_rest'>
-            <h3>Add a Restaurant to your To-eat List</h3>
-                <form action="/profile/<user_id>" method="POST">
-                    <input type="hidden" value="hidden_info" name="user.user_id" />
-                    Search for a Restaurant! <input id="searchTextField" type="text" name="search"><br><br>
+        <div class="add_rest">
+            <h2 id="add_rest_header">Add a Restaurant to your To-eat List</h2>
+                <form action="/profile/<user_id>" method="POST" id="tracking_form">
+                    Search for a Restaurant! <input id="searchTextField" type="text" name="search"><br>
+                    Include a To-eat List Note: <input id="tracking_note" type="text" name="tracking_note"><br><br>
                     <input type="submit" value="Add Restaurant"></form>
+
                 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{ key }}&libraries=places"></script>
+
                 <script>
+                    "use strict";
                     var input = document.getElementById('searchTextField');
                     var defaultBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(85, -180), 
@@ -24,9 +27,28 @@
                     function getDetails() {
                         // Get the place details from the autocomplete object.
                         var place = autocomplete.getPlace();
-                    }</script></div>
+                    }
+                </script>
+
+<script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+                <script>
+                    $(document).ready(function(){
+                            $("#tracking_form").hide();
+                        });
+
+                    function toggleDiv() {
+                       $("#tracking_form").toggle();
+                    }
+
+                    $("#add_rest_header").on('click', toggleDiv);
+                </script>
+
         <div class='rest_details'>
-            <h3>Your To-eat List Restaurants</h3>
+            <h2 id="list_header">Your To-eat List Restaurants</h2>
+            <div id="rest_list">
             {% if user.trackings|length > 0 %}
                 {% for tracking in user.trackings %}
                 <div class='rest_photo'>
@@ -41,16 +63,60 @@
                 {% endfor %}
             {% else %}
                 <p>You don't have any restaurants in your To-eat List.</p>
-            {% endif %}</div>
+            {% endif %}</div></div>
+            <script>
+                    $(document).ready(function(){
+                        $("#rest_list").hide();
+                    });
+
+                    function toggleDiv() {
+                       $("#rest_list").toggle();
+                    }
+
+                    $("#list_header").on('click', toggleDiv);
+            </script>
         <div class='friend_details'>
-            <h3>Your To-eat List Friends</h3>
+            <h2 id="friend_header">To-eat List Friends</h2>
+            <div id="friend_info">
+            <div id="current_friends">
+            <h4>Current Friends</h4>
             {% if friend_id_names|length > 0 %}
                 {% for friend in friend_id_names %}
-                    <a href="/public_profile/{{ friend[0] }}">{{ friend[1] }}</a><br>
+                    <button type="button" id="friend_profile">{{ friend[1] }}</button>
                 {% endfor %}
             {% else %}
                 <p>You don't have any To-eat List friends yet.</p>
             {% endif %}</div>
+            <div id="sugg_friends">
+            <h4>Suggested Friends</h4>
+            {% if sugg_id_names|length > 0 %}
+                {% for sugg in sugg_id_names %}
+                <form action="/profile/<user_id>" method="POST" id="sugg_add">
+                    <button type="button" name="add" id="add">Add {{ sugg[1] }}</button>
+                {% endfor %}
+            {% else %}
+                <p>We don't have any friends to suggest at this time.</p>
+            {% endif %}</div>
+            <div id="pend_friends">
+            <h4>Friend Requests</h4>
+            {% if pend_id_names|length > 0 %}
+                {% for pend in pend_id_names %}
+                    <button type="button" id="accept">Accept {{ pend[1] }}</button>
+                {% endfor %}
+            {% else %}
+                <p>You do not have any friend requests at this time.</p>
+            {% endif %}</div></div>
+            <script>
+                    $(document).ready(function(){
+                        $("#friend_info").hide();
+                    });
+
+                    function toggleDiv() {
+                       $("#friend_info").toggle();
+                    }
+
+                    $("#friend_header").on('click', toggleDiv);
+            </script>
 {% else %}
     <a href="/login">Please login.</a>
 {% endif %}
