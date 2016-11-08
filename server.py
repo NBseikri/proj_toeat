@@ -142,84 +142,10 @@ def process_add_rest(user_id):
     """Adds a restaurant to a user's To-eat List"""
 
     user_id = session['user_id']
-    # Gets user_id from session
     query = request.form.get('search')
-    query = query.split(',')
-    # Gets autocompleted search from form, splits along commas
     tracking_note = request.form.get('tracking_note')
-    # Gets tracking note from form
-    info = get_rest_info(query)
-    # Using separate function, gets all restaurant details from Google Places
-    rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
-    # Unpacks all information into separate variables for use in db insertions below
-    current_time = datetime.now()
-    # Current time for db insertions below
-
-    rests = Restaurant.query.all()
-    names = []
-    for rn in rests:
-        names.append(rn.rest_name)
-
-    print names
- 
-    for r in rests:
-        # Iterates through list and evaluates each restaurant object
-        if query[0] in names:
-            # Checks to see if an existing restaurant name matches the queried restaurant
-            exists = check_existing_trackings(user_id, r.rest_id)
-            # When there is a match, checks whether user already has a tracking for
-            # the queried restaurant
-            if exists:
-                flash('This restaurant is already in your To-eat List.')
-                return redirect('/profile/{}'.format(user_id))
-            else:
-            # Handles when a user does not already have a tracking for the queried
-            # restaurant 
-                tracking = Tracking(user_id=user_id,
-                                        rest_id=r.rest_id,
-                                        visited=False,
-                                        tracking_note=tracking_note,
-                                        tracking_review=None,
-                                        tcreated_at=current_time)
-                db.session.add(tracking)
-                db.session.commit()
-                # Adds tracking to db
-                flash('You have successfully added a restaurant.')
-                return redirect('/profile/{}'.format(user_id))
-        else:
-        # Handles a queried restaurant that is not already in the db
-        # (e.g.) when r.rest_name != query[0] 
-            restaurant = Restaurant(rest_name=rest_name, 
-                                    city=city, 
-                                    address=address, 
-                                    lat=lat, 
-                                    lng=lng, 
-                                    photo=photo, 
-                                    placeid=placeid, 
-                                    price=price, 
-                                    rating=rating, 
-                                    bus_hours=bus_hours, 
-                                    rest_review=rest_review,
-                                    rcreated_at=current_time)
-            # Creates a new restaurant object
-            db.session.add(restaurant)
-            db.session.commit()
-            new_rest_id = restaurant.rest_id
-            print 'COMMITTED rest: ', restaurant
-            tracking = Tracking(user_id=user_id,
-                            rest_id=new_rest_id,
-                            visited=False,
-                            tracking_note=tracking_note,
-                            tracking_review=None,
-                            tcreated_at=current_time)
-            # Creates new tracking object for the newly added restaurant 
-            # for the user
-            db.session.add(tracking)
-            db.session.commit()
-            print 'COMMITTED TRACKING: ', tracking
-            flash('You have successfully added a restaurant.')
-            return redirect('/profile/{}'.format(user_id))   
-
+    create_trackings_and_rests(user_id, query, tracking_note)
+    return redirect('/profile/{}'.format(user_id))
 
 
 ###################################################################
@@ -294,6 +220,8 @@ def manage_tracking(tracking_id):
     user_id = session['user_id']
     update = request.args.get('update')
     tracking_id = request.args.get('tracking_id')
+    print '###TRACKING ID###'
+    print tracking_id
     managed_tracking = Tracking.query.get(tracking_id)
    
     if update == 'True':
@@ -311,8 +239,86 @@ def display_public_profile(user_id):
 
     return 'Public Profile'
 
-###QUERIES BELOW###
+###QUERIES & FUNCTIONS BELOW###
 ###TODO: Move to separate file###
+def create_trackings_and_rests(user_id, query, tracking_note):
+    """Checks for existing trackings and restaurants and adds new entries"""
+
+    query = query.split(',')
+    info = get_rest_info(query)
+    # Using separate function, gets all restaurant details from Google Places
+    rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
+    # Unpacks all information into separate variables for use in db insertions below
+    current_time = datetime.now()
+    # Current time for db insertions below
+    match = Restaurant.query.filter_by(rest_name=query[0]).all()
+    # Gets a list of all restaurant objects that have a name that
+    # matches the queried restaurant.
+    if len(match) == 1:
+    # Handles when there is one match for the query in the db.
+        rest = match[0]
+        # Isolates the single object in the match list
+        all_trackings = db.session.query(Tracking).filter_by(user_id=user_id, rest_id=rest.rest_id).all()
+        # Gets a list of all tracking objects that 
+        # have the user's user_id and the queried rest's rest_id
+        if len(all_trackings) == 1:
+        # Handles when there is already one tracking for the restaurant
+            flash('This restaurant already exists in your To-eat List.')
+        elif len(all_trackings) == 0:
+        # Handles when there is no tracking for the restaurant
+            tracking = Tracking(user_id=user_id,
+                rest_id=rest.rest_id,
+                visited=False,
+                tracking_note=tracking_note,
+                tracking_review=None,
+                tcreated_at=current_time)
+            db.session.add(tracking)
+            db.session.commit()
+            flash('You have successfully added a restaurant.') 
+        else:
+        # Handles when there are duplicate trackings for a restaurant
+        # Deletes all but the first trackings
+            for at in all_trackings[1:]:
+                db.session.delete(at)
+                db.session.commit() 
+    elif len(match) == 0:
+    # Handles when there are no matches for the query in the db.
+    # Inserts into both restaurants table and trackings table.
+    # When there is no match in the restaurants table, there is necessarily
+    # no tracking for that queried restaurant. 
+        restaurant = Restaurant(rest_name=rest_name, 
+                                    city=city, 
+                                    address=address, 
+                                    lat=lat, 
+                                    lng=lng, 
+                                    photo=photo, 
+                                    placeid=placeid, 
+                                    price=price, 
+                                    rating=rating, 
+                                    bus_hours=bus_hours, 
+                                    rest_review=rest_review,
+                                    rcreated_at=current_time)
+        db.session.add(restaurant)
+        db.session.commit()
+        # Creates a new restaurant object
+        new_rest_id = restaurant.rest_id
+        # Gets newly created rest_id for the tracking instantiation below
+        tracking = Tracking(user_id=user_id,
+                        rest_id=new_rest_id,
+                        visited=False,
+                        tracking_note=tracking_note,
+                        tracking_review=None,
+                        tcreated_at=current_time)
+        db.session.add(tracking)
+        db.session.commit()
+        # Creates new tracking object 
+        flash('You have successfully added a restaurant.')
+        # return redirect('/profile/{}'.format(user_id)) 
+    else:
+    # Handles if there are duplicate matches in the rest table.
+        for m in match[1:]:
+            db.session.delete(m)
+            db.session.commit()
 def find_friends(user_id):
     """Given a user_id, returns a list of tuples with a friend's user_id and full name"""
 
@@ -391,16 +397,6 @@ def accept_new_friend(passed_user_id, other_friend):
     
     friendship_one[0].status = 2
     db.session.commit()
-
-def check_existing_trackings(passed_user_id, passed_rest_id):
-    """Returns true or false if a user is already tracking a specific restaurant"""
-
-    all_trackings = db.session.query(Tracking).filter_by(user_id=passed_user_id, rest_id=passed_rest_id).all()
-
-    if len(all_trackings) == 1:
-        return True
-    else:
-        return False
 
 if __name__ == "__main__":
 
