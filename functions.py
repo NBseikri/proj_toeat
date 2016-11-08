@@ -16,6 +16,7 @@ def get_rest_info(query):
 
     search_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
     details_url = 'https://maps.googleapis.com/maps/api/place/details/json'
+    gphotos_url = 'https://maps.googleapis.com/maps/api/place/photo/json'
 
     # Google Places Search payload
     payload = {
@@ -46,18 +47,37 @@ def get_rest_info(query):
     if lng is None:
         lng = None
 
-    # Photo URL from search
-    # photos = results_dict['photos'][0]['photo_reference'][0]
+    # # Photo URL from search
+    # # photos = results_dict['photos'][0]['photo_reference'][0]
+    # photos = results_dict.get('photos', None)
+    # if photos is not None:
+    #     photo_url = photos[0].get('photo_reference', None)
+    # # if photos is not None or photos != []:
+    #     # print photos[0]
+    #     # photo_dict = photos[0]
+    #     # if photo_dict != []:
+    #     #     photo_url = photo_dict.get('html_attributions', None)
+
+     # photo url from search
     photos = results_dict.get('photos', None)
     if photos is not None:
-        photo_url = photos[0].get('html_attributions', None)
-    else: 
-        photo_url = None
-    # if photos is not None or photos != []:
-        # print photos[0]
-        # photo_dict = photos[0]
-        # if photo_dict != []:
-        #     photo_url = photo_dict.get('html_attributions', None)
+        photo_dict = photos[0]
+        photo_reference = photo_dict.get('photo_reference', None)
+    #     if photo_url is not None:
+    #         print 'photo_url is: ', photo_url
+    #     else: 
+    #         print 'photo_url is: ', None
+    # else:
+    #     print 'photo_url is: ', None
+
+    gphoto_payload = {
+        'key' : key,
+        'photoreference' : photo_reference,
+        'maxwidth' : 200
+    }
+
+    photo_url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=%s&photoreference=%s&key=%s' % (gphoto_payload.get('maxwidth'), gphoto_payload.get('photoreference'), gphoto_payload.get('key'))
+ 
 
     # Place ID from search; needed for Google Places Details call below
     placeid = results_dict.get('place_id', None)
@@ -107,8 +127,6 @@ def get_rest_info(query):
                 all_reviews = all_reviews + enc_text + '|'
             else:
                 all_reviews = None
-    # else:
-    #     all_reviews = None
     
     return rest_name, city, address, lat, lng, photo_url, placeid, price, rating, bus_hours, all_reviews
 

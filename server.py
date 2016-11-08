@@ -112,6 +112,20 @@ def display_profile(user_id):
     """Displays user's profile page"""
 
     user = User.query.get(user_id)
+
+    rest_add = []
+    for ut in user.trackings:
+        address = ''
+        if ut.restaurant.address != None:
+            formatted_add = ut.restaurant.address.split(',')
+            if formatted_add[-1] == ' United States':
+                for fa in formatted_add[:-1]:
+                    address = address + fa.encode('utf-8') + ','
+            else:
+                for fa in formatted_add:
+                    address = address + fa.encode('utf-8') + ','
+        rest_add.append(address[:-1])
+
     friend_id_names = find_friends(user_id)
     sugg_id_names = suggest_friends(user_id)
     pend_id_names = pending_friends(user_id)
@@ -120,7 +134,8 @@ def display_profile(user_id):
                                         friend_id_names=friend_id_names, 
                                         sugg_id_names=sugg_id_names,
                                         pend_id_names=pend_id_names,
-                                        key=key)
+                                        key=key,
+                                        rest_add=rest_add)
 
 @app.route('/profile/<user_id>', methods=['POST'])
 def process_add_rest(user_id):
@@ -205,6 +220,8 @@ def process_add_rest(user_id):
             flash('You have successfully added a restaurant.')
             return redirect('/profile/{}'.format(user_id))   
 
+
+
 ###################################################################
 #TODO: Build out add friend route to add a suggested friend
 # @app.route('/add_friend/<user_id>', methods=['POST'])
@@ -232,6 +249,61 @@ def process_add_rest(user_id):
 # def process_acceptance(user_id, other_friend):
 #     accept_new_friend(user_id, other_friend)
 ###################################################################
+
+@app.route('/tracking/<tracking_id>')
+def display_tracked_rest(tracking_id):
+    """Show details for a user's tracked restaurant."""
+
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    tracking = Tracking.query.get(tracking_id)
+    address = tracking.restaurant.address
+    price = int(tracking.restaurant.price)
+    hours = tracking.restaurant.bus_hours
+   
+    formatted_add = address.split(',')
+    add_1 = ''
+
+    if address != None:
+        if formatted_add[-1] == ' United States':
+            for add in formatted_add[:-1]:
+                add_1 = add_1 + add.encode('utf-8') + ','
+        else:
+            for add in formatted_add:
+                add_1 = add_1 + add.encode('utf-8') + ','
+
+    add_1 = add_1[:-1]
+
+    db_reviews = tracking.restaurant.rest_review
+    db_reviews = db_reviews.split('|')
+
+    all_reviews = []
+
+    if db_reviews != None:
+        for rev in db_reviews:
+            rev = rev.encode('utf-8')
+            all_reviews.append(rev)
+
+    price = '$' * price
+
+    return render_template('tracking.html', user=user, tracking=tracking, key=key, add_1=add_1, all_reviews=all_reviews, price=price, hours=hours)
+
+@app.route('/manage/<tracking_id>', methods=['GET'])
+def manage_tracking(tracking_id):
+    """Allows a user to update visited status or delete a tracking"""
+    user_id = session['user_id']
+    update = request.args.get('update')
+    tracking_id = request.args.get('tracking_id')
+    managed_tracking = Tracking.query.get(tracking_id)
+   
+    if update == 'True':
+        managed_tracking.visited = True
+        db.session.commit()
+    elif update == 'Delete':
+        db.session.delete(managed_tracking)
+        db.session.commit()
+    flash('Your To-Eat list has been updated with your changes.')
+    return redirect('/profile/{}'.format(user_id))  
 
 @app.route('/public_profile/<user_id>')
 def display_public_profile(user_id):
@@ -303,17 +375,6 @@ def pending_friends(user_id):
 
     return friend_id_names
 
-# def add_new_friend(passed_user_id, other_friend):
-
-#     current_time = datetime.now()
-    
-#     friend = Friend(friend_one=passed_user_id,
-#                         friend_two=other_friend,
-#                         status=1,
-#                         fcreated_at=current_time)
-#     db.session.add(friend)
-#     db.session.commit()
-
 def accept_new_friend(passed_user_id, other_friend):
     """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
 
@@ -344,6 +405,7 @@ def check_existing_trackings(passed_user_id, passed_rest_id):
 if __name__ == "__main__":
 
     app.debug = True
+    app.jinja_env.auto_reload = True
     connect_to_db(app)
-    DebugToolbarExtension(app)
+    # DebugToolbarExtension(app)
     app.run(host="0.0.0.0")

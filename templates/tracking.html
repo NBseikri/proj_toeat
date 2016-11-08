@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Only presents content if a user is logged in. -->
+{% if 'user_id' in session and session['user_id'] != None %}
+<h1 id='rest_name'>{{ tracking.restaurant.rest_name }}</h1>
+<!-- Div for just the name and tracking status. -->
+<div class='manage'>
+  <p id='manage_entry'>Manage This To-Eat List Entry</p>
+  <form action='/manage/<tracking_id>', method=['GET'], id='tracking_form'>
+  {% if tracking.visited %}
+    <input type="radio" name="update" value="Delete">Remove from Your To-eat List <br>
+    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
+    <input type="submit" value="Submit"></form>
+  {% else %}
+    <input type="radio" name="update" value="True">Mark as Visited<br>
+    <input type="radio" name="update" value="Delete">Remove from Your To-eat List<br>
+    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
+    <input type="submit" value="Submit"></form>
+  {% endif %}
+</div>
+  
+<script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<script>
+    "use strict";
+    $(document).ready(function(){
+            $("#tracking_form").hide();
+        });
+
+    function toggleForm() {
+       $("#tracking_form").toggle();
+    }
+
+    $("#manage_entry").on('click', toggleForm);
+</script>
+  <div class='header_details'>
+    {% if tracking.visited %}
+        <h4 id='status'>You've visited this restaurant.</h4>
+    {% else %}
+        <h4 id='status'>This restaurant is on your To-eat List.</h4>
+    {% endif %}
+  </div>
+<!-- Div for just the map and business hours (if business hours are available). -->
+  <div class='location'>
+<!-- Empty map to be populated by JS script below. -->
+    <div id='map'></div>
+      <script src="https://code.jquery.com/jquery.js"></script>
+<!--       JS code for map -->
+      <script>
+      function initMap() {
+              var restLocation = {
+                lat: {{ tracking.restaurant.lat }}, 
+                lng: {{ tracking.restaurant.lng }} 
+            };
+
+              var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 13,
+                center: restLocation
+              });
+
+              var marker = new google.maps.Marker({
+                position: restLocation,
+                map: map
+              });
+            }
+      </script>
+<!--       Google Maps lib as src -->
+      <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script>
+      <p> {{ add_1 }} </p>
+      {% if hours != None %}
+        <p> {{ hours }} </p>
+      {% endif %}
+  </div>
+<!-- Tracking-specific information -->
+  <div class='user_details'>
+      {% if tracking.visited %}
+        {% if tracking.tracking_review != None %}
+          <h4 id='user_review'>What you thought of {{ tracking.restaurant.rest_name }}:</h4>
+          <p id='review_text'>"{{tracking.tracking_review}}"</p>
+        {% endif %}
+    {% else %}
+        {%if tracking.tracking_note != None %}
+          <h4 id='user_note'>Your To-Eat List Note:</h4>
+          <p id='note_text'>"{{tracking.tracking_note}}"</p>
+        {% endif %}
+    {% endif %}
+  </div>
+<!-- Restaurant info from Google -->
+  <div class='restaurant_details'>
+    <h4>Restaurant Details</h4>
+    <p id='price'> Price Level: {{ price }} out of $$$$</p>
+    <p id='google_user'> Google User Rating: {{ tracking.restaurant.rating }} out of 5.0</p>
+    <p id='google_text'> Google User Reviews:</p>
+        {% for rev in all_reviews %}
+          {% if rev|length > 0%}
+            <div class='rev'>"{{ rev }}"</div><br>
+          {% endif %}
+        {% endfor %}    
+  </div>
+<!-- Has user login if there is no user_id in session. -->
+{% else %}
+    <a id='login_link' href="/login">Please login.</a>
+{% endif %}
+{% endblock %}
