@@ -100,6 +100,7 @@
                 <form action="/profile/<user_id>" method="POST" id="sugg_add">
                     <input type="submit" value="{{ sugg[1] }}">
                     <input type="hidden" name="add_id" value="Add {{ sugg[0] }}">
+                </form>
                 {% endfor %}
             {% else %}
                 <p>We don't have any friends to suggest at this time.</p>

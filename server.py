@@ -147,13 +147,16 @@ def process_add_rest(user_id):
     create_trackings_and_rests(user_id, query, tracking_note)
     return redirect('/profile/{}'.format(user_id))
 
+@app.route('/accept_friend', methods=['GET'])
+def process_accept_friend():
+    """Accepts a friends request"""
 
-###################################################################
-#TODO: Build out add friend route to add a suggested friend
-# @app.route('/add_friend/<user_id>', methods=['POST'])
-# def add_friend(user_id):
-###################################################################
-
+    user_id = session['user_id']
+    accept_id = request.args.get('accept_id')
+    print accept_id
+    accept_name = request.args.get('accept_name')
+    print accept_name
+    return redirect('/profile/{}'.format(user_id))
 
 ###################################################################
 #TODO: FIGURE OUT WHY GET REQUEST FROM AJAX IS NOT ALLOWED
@@ -220,8 +223,6 @@ def manage_tracking(tracking_id):
     user_id = session['user_id']
     update = request.args.get('update')
     tracking_id = request.args.get('tracking_id')
-    print '###TRACKING ID###'
-    print tracking_id
     managed_tracking = Tracking.query.get(tracking_id)
    
     if update == 'True':
@@ -319,6 +320,7 @@ def create_trackings_and_rests(user_id, query, tracking_note):
         for m in match[1:]:
             db.session.delete(m)
             db.session.commit()
+
 def find_friends(user_id):
     """Given a user_id, returns a list of tuples with a friend's user_id and full name"""
 
@@ -403,5 +405,5 @@ if __name__ == "__main__":
     app.debug = True
     app.jinja_env.auto_reload = True
     connect_to_db(app)
-    # DebugToolbarExtension(app)
-    app.run(host="0.0.0.0")
+    DebugToolbarExtension(app)
+    app.run(host="0.0.0.0", debug=True)
