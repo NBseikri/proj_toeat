@@ -97,9 +97,9 @@
             <h4>Suggested Friends</h4>
             {% if sugg_id_names|length > 0 %}
                 {% for sugg in sugg_id_names %}
-                <form action="/profile/<user_id>" method="POST" id="sugg_add">
-                    <input type="submit" value="{{ sugg[1] }}">
-                    <input type="hidden" name="add_id" value="Add {{ sugg[0] }}">
+                <form action="/request_friend" method="GET">
+                    <input type="hidden" name="request_id" value="{{ sugg[0] }}">
+                    <input type="submit" value="Add {{ sugg[1] }}">
                 </form>
                 {% endfor %}
             {% else %}
@@ -109,9 +109,8 @@
             <h4>Friend Requests</h4>
             {% if pend_id_names|length > 0 %}
                 {% for pend in pend_id_names %}
-                <form action="/accept_friend" method="GET" id="acceptance">
+                <form action="/accept_friend" method="GET">
                     <input type="hidden" name="accept_id" value="{{ pend[0] }}">
-                    <input type="hidden" name="accept_name" value="{{ pend[1] }}">
                     <input type="submit" value="Accept {{ pend[1] }}">
                 </form>
                 {% endfor %}

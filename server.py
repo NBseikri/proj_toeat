@@ -153,31 +153,17 @@ def process_accept_friend():
 
     user_id = session['user_id']
     accept_id = request.args.get('accept_id')
-    print accept_id
-    accept_name = request.args.get('accept_name')
-    print accept_name
+    accept_new_friend(user_id, accept_id)
     return redirect('/profile/{}'.format(user_id))
 
-###################################################################
-#TODO: FIGURE OUT WHY GET REQUEST FROM AJAX IS NOT ALLOWED
-#TODO: CLEANUP /accept_friend routes (figure out what to put in return line)
-# @app.route('/accept_friend', methods=['GET'])
-# def get_acceptance():
+@app.route('/request_friend', methods=['GET'])
+def process_request_friend():
+    """Requests a friend"""
 
-#     user_id = session['user_id']
-#     print user_id
-#     other_friend = request.form.get('accept_id')
-#     print other_friend
-#     other_name = request.form.get('accept_name')
-#     print other_name
-
-#     flash('You are now friends with {}.').format(other_name)
-#     return(other_friend, other_name)??????????
-
-# @app.route('/accept_friend', methods=['POST'])
-# def process_acceptance(user_id, other_friend):
-#     accept_new_friend(user_id, other_friend)
-###################################################################
+    user_id = session['user_id']
+    request_id = request.args.get('request_id')
+    request_new_friend(user_id, request_id)
+    return redirect('/profile/{}'.format(user_id))
 
 @app.route('/tracking/<tracking_id>')
 def display_tracked_rest(tracking_id):
@@ -366,14 +352,15 @@ def suggest_friends(passed_user_id):
 def pending_friends(user_id):
     """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
 
-    all_friends = Friend.query.filter(Friend.status==1).all()
+    # all_friends = Friend.query.filter(Friend.status==1).all()
+    all_friends = db.session.query(Friend).filter_by(friend_two=user_id, status=1).all()
     
     user_friends = []
-    for friend in all_friends:
-        if friend.friend_one == int(user_id):
+
+    if all_friends:
+        for friend in all_friends:
             user_friends.append(friend.friend_two)
-        elif friend.friend_two == int(user_id):
-            user_friends.append(friend.friend_one)
+
 
     friend_id_names = []
     for fid in user_friends:
@@ -383,22 +370,48 @@ def pending_friends(user_id):
 
     return friend_id_names
 
-def accept_new_friend(passed_user_id, other_friend):
+def accept_new_friend(user_id, accept_id):
+    # friend.accept_new_friend(accept_id)
+    # create a method on the Friend class instead of imported functions
     """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
 
-    friendship_one = db.session.query(Friend).filter_by(friend_one=passed_user_id, friend_two=other_friend, status=1).all()
-    friendship_two = db.session.query(Friend).filter_by(friend_one=other_friend, friend_two=passed_user_id, status=1).all()
-    if len(friendship_one) > 0 and len(friendship_two) > 0:
-        # delete all friendships in friendship_two with for loop to get rid of any duplicates
-        for friendship in friendship_two:
-            db.session.delete(friendship)
-            db.session.commit()
+    friendship_one = db.session.query(Friend).filter_by(friend_one=user_id, friend_two=accept_id, status=1).all()
+    friendship_two = db.session.query(Friend).filter_by(friend_one=accept_id, friend_two=user_id, status=1).all()
+    if len(friendship_one) > 1 and len(friendship_two) > 0:
         for friendship in friendship_one[1:]:
             db.session.delete(friendship)
             db.session.commit()
-    
-    friendship_one[0].status = 2
+        for friendship in friendship_two:
+            db.session.delete(friendship)
+            db.session.commit()
+        friendship_one[0].status = 2
+        db.session.commit()
+    elif len(friendship_two) > 1 and len(friendship_one) > 0:
+        for friendship in friendship_two[1:]:
+            db.session.delete(friendship)
+            db.session.commit()
+        for friendship in friendship_one:
+            db.session.delete(friendship)
+            db.session.commit()
+        friendship_two[0].status = 2
+        db.session.commit()
+    elif len(friendship_one) == 0 and len(friendship_two) == 1:
+        friendship_two[0].status = 2
+        db.session.commit()
+    elif len(friendship_two) == 0 and len(friendship_one) == 1:
+        friendship_one[0].status = 2
+        db.session.commit()
+
+def request_new_friend(user_id, request_id):
+    """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
+    current_time = datetime.now()
+    friend = Friend(friend_one=user_id, 
+                                friend_two=request_id, 
+                                status=1,
+                                fcreated_at=current_time)
+    db.session.add(friend)
     db.session.commit()
+    
 
 if __name__ == "__main__":
 
