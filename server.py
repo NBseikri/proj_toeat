@@ -144,16 +144,28 @@ def process_add_rest(user_id):
     user_id = session['user_id']
     query = request.form.get('search')
     tracking_note = request.form.get('tracking_note')
-    create_trackings_and_rests(user_id, query, tracking_note)
+    print tracking_note
+    tracking_review = request.form.get('tracking_review')
+    print tracking_review
+    visited_yes = request.form.get('visited_yes')
+    print visited_yes
+    visited_no = request.form.get('visited_no')
+    print visited_no
+
+    # if len(tracking_note.encode('utf-8')) == 0:
+    #     tracking_note = None
+
+    # if len(tracking_review.encode('utf-8')) == 0:
+
     return redirect('/profile/{}'.format(user_id))
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
     """Accepts a friends request"""
 
-    user_id = session['user_id']
     accept_id = request.args.get('accept_id')
-    accept_new_friend(user_id, accept_id)
+    user_id = session['user_id']
+    accept_new_friend(accept_id, user_id)
     return redirect('/profile/{}'.format(user_id))
 
 @app.route('/request_friend', methods=['GET'])
@@ -220,15 +232,35 @@ def manage_tracking(tracking_id):
     flash('Your To-Eat list has been updated with your changes.')
     return redirect('/profile/{}'.format(user_id))  
 
-@app.route('/public_profile/<user_id>')
-def display_public_profile(user_id):
+@app.route('/friend_profile')
+def display_friend_profile():
     """Displays user's public profile page"""
+    user_id = session['user_id']
+    friend_id = request.args.get('friend_id')
+    friend = User.query.get(friend_id)
+    friend_id_names = find_friends(friend_id)
 
-    return 'Public Profile'
+    rest_add = []
+    for ft in friend.trackings:
+        address = ''
+        if ft.restaurant.address != None:
+            formatted_add = ft.restaurant.address.split(',')
+            if formatted_add[-1] == ' United States':
+                for fa in formatted_add[:-1]:
+                    address = address + fa.encode('utf-8') + ','
+            else:
+                for fa in formatted_add:
+                    address = address + fa.encode('utf-8') + ','
+        rest_add.append(address[:-1])
+
+    return render_template('friend.html', friend=friend, 
+                                    rest_add=rest_add, 
+                                    friend_id_names=friend_id_names)
+
 
 ###QUERIES & FUNCTIONS BELOW###
 ###TODO: Move to separate file###
-def create_trackings_and_rests(user_id, query, tracking_note):
+def create_trackings_and_rests(user_id, query, tracking_note, tracking_review):
     """Checks for existing trackings and restaurants and adds new entries"""
 
     query = query.split(',')
@@ -253,15 +285,26 @@ def create_trackings_and_rests(user_id, query, tracking_note):
             flash('This restaurant already exists in your To-eat List.')
         elif len(all_trackings) == 0:
         # Handles when there is no tracking for the restaurant
-            tracking = Tracking(user_id=user_id,
-                rest_id=rest.rest_id,
-                visited=False,
-                tracking_note=tracking_note,
-                tracking_review=None,
-                tcreated_at=current_time)
-            db.session.add(tracking)
-            db.session.commit()
-            flash('You have successfully added a restaurant.') 
+            if tracking_note:
+                tracking = Tracking(user_id=user_id,
+                    rest_id=rest.rest_id,
+                    visited=False,
+                    tracking_note=tracking_note,
+                    tracking_review=None,
+                    tcreated_at=current_time)
+                db.session.add(tracking)
+                db.session.commit()
+                flash('You have successfully added a restaurant.')
+            elif tracking_review:
+                tracking = Tracking(user_id=user_id,
+                    rest_id=rest.rest_id,
+                    visited=True,
+                    tracking_note=None,
+                    tracking_review=tracking_review,
+                    tcreated_at=current_time)
+                db.session.add(tracking)
+                db.session.commit()
+                flash('You have successfully added a restaurant.')
         else:
         # Handles when there are duplicate trackings for a restaurant
         # Deletes all but the first trackings
@@ -352,14 +395,13 @@ def suggest_friends(passed_user_id):
 def pending_friends(user_id):
     """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
 
-    # all_friends = Friend.query.filter(Friend.status==1).all()
     all_friends = db.session.query(Friend).filter_by(friend_two=user_id, status=1).all()
     
     user_friends = []
 
     if all_friends:
         for friend in all_friends:
-            user_friends.append(friend.friend_two)
+            user_friends.append(friend.friend_one)
 
 
     friend_id_names = []
@@ -370,37 +412,15 @@ def pending_friends(user_id):
 
     return friend_id_names
 
-def accept_new_friend(user_id, accept_id):
+def accept_new_friend(accept_id, user_id):
     # friend.accept_new_friend(accept_id)
     # create a method on the Friend class instead of imported functions
     """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
 
-    friendship_one = db.session.query(Friend).filter_by(friend_one=user_id, friend_two=accept_id, status=1).all()
-    friendship_two = db.session.query(Friend).filter_by(friend_one=accept_id, friend_two=user_id, status=1).all()
-    if len(friendship_one) > 1 and len(friendship_two) > 0:
-        for friendship in friendship_one[1:]:
-            db.session.delete(friendship)
-            db.session.commit()
-        for friendship in friendship_two:
-            db.session.delete(friendship)
-            db.session.commit()
-        friendship_one[0].status = 2
-        db.session.commit()
-    elif len(friendship_two) > 1 and len(friendship_one) > 0:
-        for friendship in friendship_two[1:]:
-            db.session.delete(friendship)
-            db.session.commit()
-        for friendship in friendship_one:
-            db.session.delete(friendship)
-            db.session.commit()
-        friendship_two[0].status = 2
-        db.session.commit()
-    elif len(friendship_one) == 0 and len(friendship_two) == 1:
-        friendship_two[0].status = 2
-        db.session.commit()
-    elif len(friendship_two) == 0 and len(friendship_one) == 1:
-        friendship_one[0].status = 2
-        db.session.commit()
+    friendship = db.session.query(Friend).filter_by(friend_one=accept_id, friend_two=user_id, status=1).all()
+
+    friendship[0].status = 2
+    db.session.commit()
 
 def request_new_friend(user_id, request_id):
     """Accept a friend request by changing the status from pending (1) to confirmed (2)"""

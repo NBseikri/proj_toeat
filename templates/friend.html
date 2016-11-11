@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if 'user_id' in session and session['user_id'] != None %}
+ <div class='rest_details'>
+            <h2 id="list_header">{{ friend.first_name }}'s To-eat List Restaurants</h2>
+            <div id="rest_list">
+            {% if friend.trackings|length > 0 %}
+                {% set count = 0 %}
+                {% for tracking in friend.trackings %}
+                <div class='rest_photo'>
+                    <img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
+                <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
+                <p>{{ rest_add[count] }}</p>
+                    {% set count = count + 1 %}
+                    {% if tracking.visited %}
+                        <p>{{ friend.first_name }} has eaten here.</p>
+                        {% if tracking.tracking_review %}
+                            <p> {{ friend.first_name }}'s Review of {{ tracking.restaurant.rest_name }}:<p>
+                            <p> {{ tracking.tracking_review }}
+                        {% endif %}
+                    {% else %}
+                        <p>On {{ friend.first_name }}'s To-eat List.</p>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>{{ friend.first_name }} doesn't have any restaurants in their To-eat List.</p>
+            {% endif %}</div></div>
+{% else %}
+    <a id='login_link' href="/login">Please login.</a>
+{% endif %}
+{% endblock %}
