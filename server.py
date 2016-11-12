@@ -143,19 +143,17 @@ def process_add_rest(user_id):
 
     user_id = session['user_id']
     query = request.form.get('search')
-    tracking_note = request.form.get('tracking_note')
-    print tracking_note
+    yes = request.form.get('yes')
+    no = request.form.get('no')
     tracking_review = request.form.get('tracking_review')
-    print tracking_review
-    visited_yes = request.form.get('visited_yes')
-    print visited_yes
-    visited_no = request.form.get('visited_no')
-    print visited_no
+    tracking_note = request.form.get('tracking_note')
 
-    # if len(tracking_note.encode('utf-8')) == 0:
-    #     tracking_note = None
+    if yes:
+        response = True
+    if no:
+        response = False
 
-    # if len(tracking_review.encode('utf-8')) == 0:
+    create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review)
 
     return redirect('/profile/{}'.format(user_id))
 
@@ -260,7 +258,7 @@ def display_friend_profile():
 
 ###QUERIES & FUNCTIONS BELOW###
 ###TODO: Move to separate file###
-def create_trackings_and_rests(user_id, query, tracking_note, tracking_review):
+def create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review):
     """Checks for existing trackings and restaurants and adds new entries"""
 
     query = query.split(',')
@@ -268,6 +266,7 @@ def create_trackings_and_rests(user_id, query, tracking_note, tracking_review):
     # Using separate function, gets all restaurant details from Google Places
     rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
     # Unpacks all information into separate variables for use in db insertions below
+    rest_review = rest_review.encode('utf-8')
     current_time = datetime.now()
     # Current time for db insertions below
     match = Restaurant.query.filter_by(rest_name=query[0]).all()
@@ -285,20 +284,24 @@ def create_trackings_and_rests(user_id, query, tracking_note, tracking_review):
             flash('This restaurant already exists in your To-eat List.')
         elif len(all_trackings) == 0:
         # Handles when there is no tracking for the restaurant
-            if tracking_note:
+            if response == False:
+                if len(tracking_note) == 0:
+                    tracking_note = None
                 tracking = Tracking(user_id=user_id,
                     rest_id=rest.rest_id,
-                    visited=False,
+                    visited=response,
                     tracking_note=tracking_note,
                     tracking_review=None,
                     tcreated_at=current_time)
                 db.session.add(tracking)
                 db.session.commit()
                 flash('You have successfully added a restaurant.')
-            elif tracking_review:
+            elif response == True:
+                if len(tracking_review) == 0:
+                    tracking_review = None
                 tracking = Tracking(user_id=user_id,
                     rest_id=rest.rest_id,
-                    visited=True,
+                    visited=response,
                     tracking_note=None,
                     tracking_review=tracking_review,
                     tcreated_at=current_time)

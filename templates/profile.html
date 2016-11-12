@@ -12,21 +12,20 @@
                 <form action="/profile/<user_id>" method="POST" id="tracking_form">
                     Search for a Restaurant 
                         <input id="searchTextField" type="text" name="search"><br>
-                    Have you visited this restaurant? 
-                        <button type="button" id="yes" name="yes" value="True">Yes</button>
-                        <button type="button" id="no" name="no" value="False">No</button>
+                    Have you visited this restaurant?<br> 
+<!--                         <button type="button" id="yes" name="yes" value="True">Yes</button>
+                        <button type="button" id="no" name="no" value="False">No</button> -->
+                        <input type="radio" name="yes" value="yes" id="yes">Yes
+                        <input type="radio" name="no" value="no" id="no">No<br>
                         <div id="track">
                             Include a To-eat List Note: <input id="tracking_note" type="text" name="tracking_note">
-                            <input type="hidden" name="visited_no" value="True">
                             <input type="submit" id="submit" value="Add Restaurant">
-
                         </div>
                         <div id="review">
                             Add a Review: <input id="tracking_review" type="text" name="tracking_review"
                                cols="40" 
                                rows="5" 
                                style="width:400px; height:50px;">
-                               <input type="hidden" name="visited_yes" value="True">
                                <input type="submit" id="submit" value="Add Restaurant">
                         </div><br>
                 </form>
