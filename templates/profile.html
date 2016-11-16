@@ -113,10 +113,21 @@
                                     </form>
                                 <br><br>
                             </div>
-                            <!-- Closes #organize_list div -->
+                            <!-- Closes #filter_list div -->
+                            <div id="sort_list">
+                                <p>Sort By:</p>
+                                    <form action="/sort_rest" method="GET" id="sort_form">
+                                        <select id="sort_select">
+                                            <option value="low_price">Price: Low to High</option>
+                                            <option value="high_price">Price: High to Low</option>
+                                            <option value="low_rating">Rating: Low to High</option>
+                                            <option value="high_rating">Ratings: High to Low</option>
+                                        </select>
+                                        <input type="submit" value="Sort"></input>
+                                    </form>
+                                <br><br>
+                            </div>
                         
-
-
                             <div id="original_rest">
                             <!-- Div for original_rest -->
                                 {% if user.trackings|length > 0 %}
@@ -173,7 +184,6 @@
                         }
                     }
 
-
                     function orgRequest(evt) {
                         evt.preventDefault();
                         var formInputs = {
@@ -185,6 +195,21 @@
                     }
 
                     $("#filter_form").on("submit", orgRequest);
+
+
+                    function sortRequest(evt){
+                        evt.preventDefault();
+                        console.log('HEYYYYYYYY!')
+                        var sortInputs = {
+                            "sort" : $("#sort_select").val(),
+                        };
+                        console.log(sortInputs["sort"])
+                        $.get("/sort_rest"),
+                            sortInputs,
+                            showOrg;
+                    }
+
+                    $("#submit_form").on("sumbit", sortRequest);
             </script>
         <div class='friend_details'>
             <h2 id="friend_header">To-eat List Friends</h2>

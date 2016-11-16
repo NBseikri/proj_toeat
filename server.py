@@ -145,7 +145,7 @@ def process_add_rest(user_id):
 
     return redirect('/profile/{}'.format(user_id))
 
-# TODO: Build out list filtering
+
 @app.route('/filter_rest', methods=['GET'])
 def filter_rest():
 
@@ -153,6 +153,41 @@ def filter_rest():
     user = User.query.get(user_id)
     filter_by = request.args.get('filter')
     return filter_trackings(user_id, user, filter_by)
+
+@app.route('/sort_rest', methods=['GET'])
+def sort_rest():
+
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    sort_by = request.args.get('sort')
+    print sort_by
+
+    # Ascending
+    # trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price).all()
+    # Descending
+    # trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price.desc()).all()
+
+    # if sort_by == "low_price":
+    #     l_trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price).all()
+    #     l_tracking_json = {'data' : []}
+    #     if len(l_trackings) > 0:
+    #         for tracking in l_trackings:
+    #             if tracking.visited == True:
+    #                 visited = "You've eaten here."
+    #             else:
+    #                 visited = "On your To-eat List."
+    #             track_dict = {
+    #             "tracking_id" : tracking.tracking_id,
+    #             "visited" : visited,
+    #             "rest_name" : tracking.restaurant.rest_name,
+    #             "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
+    #             "photo" : tracking.restaurant.photo}
+    #             l_tracking_json['data'].append(track_dict)
+    #         sorted_json = jsonify(l_tracking_json)
+    #     return sorted_json
+
+    return 'Hi'
+
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
