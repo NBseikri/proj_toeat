@@ -8,14 +8,14 @@ from datetime import datetime
 import requests
 import decimal
 from functions import get_rest_info
+from flask.ext.bcrypt import Bcrypt
+
 
 key = os.environ["G_PLACES_KEY"]
-
 app = Flask(__name__)
-
 app.secret_key = "ABC"
-
 app.jinja_env.undefined = StrictUndefined
+bcrypt = Bcrypt(app)
 
 @app.route('/')
 def homepage():
@@ -50,7 +50,7 @@ def process_login():
         user = user_query.first()
 
     if user:
-        if user.password == password:
+        if bcrypt.check_password_hash(user.password, password):
             flash('You have successfully logged in.')
             session['user_id'] = user.user_id
             return redirect('/profile/{}'.format(user.user_id))
@@ -83,6 +83,7 @@ def process_registration():
     username = request.form.get('username')
     email = request.form.get('email').encode('utf-8')
     password = request.form.get('password')
+    encrypted_pw = bcrypt.generate_password_hash(password)
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
     ucreated_at = datetime.now()
@@ -95,7 +96,7 @@ def process_registration():
     else: 
         user = User(username=username,
             email=email,
-            password=password,
+            password=encrypted_pw,
             first_name=first_name,
             last_name=last_name,
             ucreated_at=ucreated_at)
@@ -112,30 +113,21 @@ def display_profile(user_id):
     """Displays user's profile page"""
 
     user = User.query.get(user_id)
-
-    rest_add = []
-    for ut in user.trackings:
-        address = ''
-        if ut.restaurant.address != None:
-            formatted_add = ut.restaurant.address.split(',')
-            if formatted_add[-1] == ' United States':
-                for fa in formatted_add[:-1]:
-                    address = address + fa.encode('utf-8') + ','
-            else:
-                for fa in formatted_add:
-                    address = address + fa.encode('utf-8') + ','
-        rest_add.append(address[:-1])
-
+    rest_add = format_add(user) 
     friend_id_names = find_friends(user_id)
     sugg_id_names = suggest_friends(user_id)
     pend_id_names = pending_friends(user_id)
 
-    return render_template('profile.html', user=user, 
+    if session['user_id'] == user.user_id:
+        return render_template('profile.html', user=user, 
                                         friend_id_names=friend_id_names, 
                                         sugg_id_names=sugg_id_names,
                                         pend_id_names=pend_id_names,
                                         key=key,
                                         rest_add=rest_add)
+    else: 
+        flash('You must be signed in to the correct account to view the page you requested. Please return to your profile or login.')
+        return redirect('/login')
 
 @app.route('/profile/<user_id>', methods=['POST'])
 def process_add_rest(user_id):
@@ -156,6 +148,30 @@ def process_add_rest(user_id):
     create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review)
 
     return redirect('/profile/{}'.format(user_id))
+
+# TODO: Build out list filtering
+@app.route('/filter_rest', methods=['GET'])
+def filter_rest():
+
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    filter_by = request.args.get('visited')
+    print filter_by
+
+    v_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==True).all()
+    v_tracking_json = {'data' : []}
+    if len(v_trackings) > 0:
+        for tracking in v_trackings:
+            track_dict = {
+            "tracking_id" : tracking.tracking_id,
+            "visited" : "You've eaten here.",
+            "rest_name" : tracking.restaurant.rest_name,
+            "price" : int(tracking.restaurant.price),
+            "rating" : int(tracking.restaurant.rating),
+            "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
+            "photo" : tracking.restaurant.photo}
+            v_tracking_json['data'].append(track_dict)
+        return jsonify(v_tracking_json)
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
@@ -183,7 +199,8 @@ def display_tracked_rest(tracking_id):
     user = User.query.get(user_id)
     tracking = Tracking.query.get(tracking_id)
     address = tracking.restaurant.address
-    price = int(tracking.restaurant.price)
+    price = (int(tracking.restaurant.price))
+    price = '$' * price
     hours = tracking.restaurant.bus_hours
    
     formatted_add = address.split(',')
@@ -208,8 +225,6 @@ def display_tracked_rest(tracking_id):
         for rev in db_reviews:
             rev = rev.encode('utf-8')
             all_reviews.append(rev)
-
-    price = '$' * price
 
     return render_template('tracking.html', user=user, tracking=tracking, key=key, add_1=add_1, all_reviews=all_reviews, price=price, hours=hours)
 
@@ -237,19 +252,23 @@ def display_friend_profile():
     friend_id = request.args.get('friend_id')
     friend = User.query.get(friend_id)
     friend_id_names = find_friends(friend_id)
-
-    rest_add = []
-    for ft in friend.trackings:
-        address = ''
-        if ft.restaurant.address != None:
-            formatted_add = ft.restaurant.address.split(',')
-            if formatted_add[-1] == ' United States':
-                for fa in formatted_add[:-1]:
-                    address = address + fa.encode('utf-8') + ','
-            else:
-                for fa in formatted_add:
-                    address = address + fa.encode('utf-8') + ','
-        rest_add.append(address[:-1])
+    rest_add = format_add(friend)
+    # TODO: Delete after you confirm that the function below still works
+    # when moved to a standalone function
+    #
+    #
+    # rest_add = []
+    # for ft in friend.trackings:
+    #     address = ''
+    #     if ft.restaurant.address != None:
+    #         formatted_add = ft.restaurant.address.split(',')
+    #         if formatted_add[-1] == ' United States':
+    #             for fa in formatted_add[:-1]:
+    #                 address = address + fa.encode('utf-8') + ','
+    #         else:
+    #             for fa in formatted_add:
+    #                 address = address + fa.encode('utf-8') + ','
+    #     rest_add.append(address[:-1])
 
     return render_template('friend.html', friend=friend, 
                                     rest_add=rest_add, 
@@ -285,38 +304,47 @@ def create_trackings_and_rests(user_id, query, response, tracking_note, tracking
         elif len(all_trackings) == 0:
         # Handles when there is no tracking for the restaurant
             if response == False:
+                # Handles if user has not been the restaurant
                 if len(tracking_note) == 0:
                     tracking_note = None
+                    # Converts an empty tracking note to None for db consistency
                 tracking = Tracking(user_id=user_id,
                     rest_id=rest.rest_id,
-                    visited=response,
+                    visited=False,
                     tracking_note=tracking_note,
                     tracking_review=None,
                     tcreated_at=current_time)
                 db.session.add(tracking)
                 db.session.commit()
+                # Creates a new tracking object; inserts tracking into db 
                 flash('You have successfully added a restaurant.')
+                # Confirms update upon redirect
             elif response == True:
+                # Handles when a user has been to a restaurant
                 if len(tracking_review) == 0:
                     tracking_review = None
+                    # Converts an empty tracking review to None for db consistency
                 tracking = Tracking(user_id=user_id,
                     rest_id=rest.rest_id,
-                    visited=response,
+                    visited=True,
                     tracking_note=None,
                     tracking_review=tracking_review,
                     tcreated_at=current_time)
                 db.session.add(tracking)
                 db.session.commit()
+                # Creates a new tracking object; insterts tracking into db
                 flash('You have successfully added a restaurant.')
+                # Confirms update upon redirect
         else:
         # Handles when there are duplicate trackings for a restaurant
-        # Deletes all but the first trackings
+        # Deletes all but the first trackings 
             for at in all_trackings[1:]:
                 db.session.delete(at)
                 db.session.commit() 
     elif len(match) == 0:
+    # Isolates the single object in the match list.
     # Handles when there are no matches for the query in the db.
-    # Inserts into both restaurants table and trackings table.
+    # Inserts into both restaurants table and trackings tables.
     # When there is no match in the restaurants table, there is necessarily
     # no tracking for that queried restaurant. 
         restaurant = Restaurant(rest_name=rest_name, 
@@ -335,23 +363,57 @@ def create_trackings_and_rests(user_id, query, response, tracking_note, tracking
         db.session.commit()
         # Creates a new restaurant object
         new_rest_id = restaurant.rest_id
-        # Gets newly created rest_id for the tracking instantiation below
-        tracking = Tracking(user_id=user_id,
-                        rest_id=new_rest_id,
-                        visited=False,
-                        tracking_note=tracking_note,
-                        tracking_review=None,
-                        tcreated_at=current_time)
-        db.session.add(tracking)
-        db.session.commit()
-        # Creates new tracking object 
-        flash('You have successfully added a restaurant.')
-        # return redirect('/profile/{}'.format(user_id)) 
-    else:
-    # Handles if there are duplicate matches in the rest table.
-        for m in match[1:]:
-            db.session.delete(m)
+        # Gets newly created rest_id for the tracking instantiations below
+        if response == False:
+            # Handles if the user has not been to a restaurant
+            if len(tracking_note) == 0:
+                tracking_note = None
+                # Converts an empty tracking note to None for db consistency
+            tracking = Tracking(user_id=user_id,
+                rest_id=restaurant.rest_id,
+                visited=False,
+                tracking_note=tracking_note,
+                tracking_review=None,
+                tcreated_at=current_time)
+            db.session.add(tracking)
             db.session.commit()
+            # Creates a new tracking object; insterts tracking into db
+            flash('You have successfully added a restaurant.')
+            # Confirms update upon redirect
+        elif response == True:
+            # Handles if the user has been to a restaurant
+            if len(tracking_review) == 0:
+                tracking_review = None
+                # Converts to an empty tracking review to None for db consistency
+            tracking = Tracking(user_id=user_id,
+                rest_id=restaurant.rest_id,
+                visited=True,
+                tracking_note=None,
+                tracking_review=tracking_review,
+                tcreated_at=current_time)
+            db.session.add(tracking)
+            db.session.commit()
+            # Creates new tracking object; inserts tracking into db
+            flash('You have successfully added a restaurant.')
+
+
+def format_add(obj):
+    """Returns list of formatted addresses for restaurants"""
+
+    rest_add = []
+    for ot in obj.trackings:
+        address = ''
+        if ot.restaurant.address != None:
+            formatted_add = ot.restaurant.address.split(',')
+            if formatted_add[-1] == ' United States':
+                for fa in formatted_add[:-1]:
+                    address = address + fa.encode('utf-8') + ','
+            else:
+                for fa in formatted_add:
+                    address = address + fa.encode('utf-8') + ','
+        rest_add.append(address[:-1])
+
+    return rest_add
 
 def find_friends(user_id):
     """Given a user_id, returns a list of tuples with a friend's user_id and full name"""

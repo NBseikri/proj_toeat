@@ -2,6 +2,9 @@
 {% block content %}
 
 {% if 'user_id' in session and session['user_id'] != None %}
+        <a href="/logout">Logout</a><br>
+        <a href="/profile/{{ session['user_id'] }}">My Profile</a><br>
+
  <div class='rest_details'>
             <h2 id="list_header">{{ friend.first_name }}'s To-eat List Restaurants</h2>
             <div id="rest_list">
@@ -14,10 +17,11 @@
                 <p>{{ rest_add[count] }}</p>
                     {% set count = count + 1 %}
                     {% if tracking.visited %}
-                        <p>{{ friend.first_name }} has eaten here.</p>
                         {% if tracking.tracking_review %}
-                            <p> {{ friend.first_name }}'s Review of {{ tracking.restaurant.rest_name }}:<p>
-                            <p> {{ tracking.tracking_review }}
+                        <p>{{ friend.first_name }} visited this restaurant and wrote this review:</p>
+                        <p>"{{ tracking.tracking_review }}"</p>
+                        {% else %}
+                        <p>{{ friend.first_name }} has eaten here.</p>
                         {% endif %}
                     {% else %}
                         <p>On {{ friend.first_name }}'s To-eat List.</p>

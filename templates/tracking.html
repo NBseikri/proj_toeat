@@ -2,6 +2,9 @@
 {% block content %}
 <!-- Only presents content if a user is logged in. -->
 {% if 'user_id' in session and session['user_id'] != None %}
+        <a href="/logout">Logout</a><br>
+        <a href="/profile/{{ session['user_id'] }}">My Profile</a><br>
+
 <h1 id='rest_name'>{{ tracking.restaurant.rest_name }}</h1>
 <!-- Div for just the name and tracking status. -->
 <div class='manage'>

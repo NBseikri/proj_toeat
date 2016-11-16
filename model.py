@@ -13,7 +13,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     username = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(32), nullable=True)
-    password = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
     first_name = db.Column(db.String(32), nullable=False)
     last_name = db.Column(db.String(32), nullable=False)
     ucreated_at = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)

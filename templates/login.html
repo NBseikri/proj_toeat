@@ -2,7 +2,9 @@
 {% block content %}
 
 <h1>Login</h1>
-
+{% if 'user_id' in session and session['user_id'] != None %}
+        <a href="/profile/{{ session['user_id'] }}">Return to My Profile</a><br><br>
+{% endif %}
 <form action="/login" method="POST">
     <label>Email: </label><input name="email" type="email"><br>
     <label>Password: </label><input name="password" type="password"><br><br>

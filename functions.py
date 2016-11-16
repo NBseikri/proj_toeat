@@ -105,9 +105,16 @@ def get_rest_info(query):
     d_results = details_json.get('result', None)
 
     # City from details
-    city = d_results['address_components'][3]['long_name']
-    if city is None:
-        city = None
+    # city = d_results['address_components'][3]['long_name']
+    # if city is None:
+    #     city = None
+    address_comp = d_results.get('address_components', None)
+    locality = address_comp[3]
+    city = locality.get('long_name', None)
+    if city is not None:
+        print 'city is: ', city
+    else: 
+        print 'city is: ', None
 
     # Business hours from details
     bus_hours = d_results.get('weekday_text', None)

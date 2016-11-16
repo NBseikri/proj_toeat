@@ -2,6 +2,9 @@
 {% block content %}
 
 {% if 'user_id' in session and session['user_id'] != None %}
+    {% if session['user_id'] %}
+        <a href="/logout">Logout</a><br>
+    {% endif %}
 <script
   src="https://code.jquery.com/jquery-3.1.1.min.js"
   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
@@ -13,8 +16,6 @@
                     Search for a Restaurant 
                         <input id="searchTextField" type="text" name="search"><br>
                     Have you visited this restaurant?<br> 
-<!--                         <button type="button" id="yes" name="yes" value="True">Yes</button>
-                        <button type="button" id="no" name="no" value="False">No</button> -->
                         <input type="radio" name="yes" value="yes" id="yes">Yes
                         <input type="radio" name="no" value="no" id="no">No<br>
                         <div id="track">
@@ -95,26 +96,51 @@
                     $("#add_rest_header").on('click', toggleDiv);
                 </script>
 
-        <div class='rest_details'>
-            <h2 id="list_header">Your To-eat List Restaurants</h2>
-            <div id="rest_list">
-            {% if user.trackings|length > 0 %}
-                {% set count = 0 %}
-                {% for tracking in user.trackings %}
-                <div class='rest_photo'>
-                    <img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
-                <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
-                <p>{{ rest_add[count] }}</p>
-                    {% set count = count + 1 %}
-                    {% if tracking.visited %}
-                        <p>You've eaten here.</p>
-                    {% else %}
-                        <p>On your To-eat List.</p>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <p>You don't have any restaurants in your To-eat List.</p>
-            {% endif %}</div></div>
+                <div class='rest_details'>
+                <!-- Div for all restaurant related info -->
+                    <h2 id="list_header">Your To-eat List Restaurants</h2>
+                    <!-- Div for form and original_list -->
+                        <div id="rest_list">
+                        <!-- Div for form -->
+                            <div id="filter_list">
+                                <p>Filter By:</p>
+                                    <form action="/filter_rest" method="GET" name="filter_list" id="filter">
+                                        <select name="filter" id="select">
+                                            <option name="visited" value="visited">Visited</option>
+                                            <option name= "not_visited" value="not_visited">To-eat</option>
+                                            <input type="submit" id="submit_org" value="Filter">
+                                        </select>
+                                    </form>
+                                <br><br>
+                            </div>
+                            <!-- Closes #organize_list div -->
+                        
+
+
+                            <div id="original_rest">
+                            <!-- Div for original_rest -->
+                                {% if user.trackings|length > 0 %}
+                                {% set count = 0 %}
+                                {% for tracking in user.trackings %}
+                                    <div class='rest_photo'><img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
+                                    <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
+<!--                                     <p>{{ rest_add[count] }}</p> -->
+                                {% set count = count + 1 %}
+                                {% if tracking.visited %}
+                                    <p>You've eaten here.</p>
+                                {% else %}
+                                    <p>On your To-eat List.</p>
+                                {% endif %}
+                                {% endfor %}
+                                {% else %}
+                                    <p>You don't have any restaurants in your To-eat List.</p>
+                                {% endif %}
+                            </div>
+                            <!-- Closes original_rest div -->
+                        </div>
+                        <!-- Closes rest_list div -->
+                </div>
+                <!-- Closes rest_details div -->
             <script>
                     "use strict";
                     $(document).ready(function(){
@@ -126,6 +152,34 @@
                     }
 
                     $("#list_header").on('click', toggleDiv);
+
+                    function showOrg(result) {
+                        var data = result.data;
+                        $("#original_rest").empty();
+                        for (var i in data) {
+                            var photo = data[i]['photo'];
+                            var newPhotoHTML = ("<div class='rest_photo'><img src='" + photo + "'width='100' height='100'></a></div>");
+
+                            var id = data[i]['tracking_id'];
+                            var rest_name = data[i]['rest_name'];
+                            var newLink = ("<a href=/tracking/" + id + ">" + rest_name + "</a>");
+
+
+                            var visited = data[i]['visited'];
+                            var newVisit = ("<p>" + visited +"</p>");
+
+                            $( "#original_rest" ).append(newPhotoHTML, newLink, newVisit);
+
+                        }
+                    }
+
+
+                    function orgRequest(evt) {
+                        evt.preventDefault();
+                        $.get("/filter_rest", showOrg);
+                    }
+
+                    $("#filter").on("submit", orgRequest);
             </script>
         <div class='friend_details'>
             <h2 id="friend_header">To-eat List Friends</h2>
@@ -182,28 +236,6 @@
                     }
 
                     $("#friend_header").on('click', toggleDiv);
-
-                    //Accepting a friend request
-
-                    // function showAcceptance(result) {
-                    //     $('#friend_profile').html(result);
-                    // }
-
-                    // function submitAcceptance(evt) {
-                    //     evt.preventDefault();
-
-                    //     var formInputs = {
-                    //         "accept_id": $("#accept_id").val(),
-                    //         "accept_name": $("#accept_name").val()
-                    //     };
-
-                    //     $.post("/accept_friend", 
-                    //            submitAcceptance,
-                    //            showAcceptance
-                    //            );
-                    // }
-
-                    // $("#acceptance").on("submit", submitOrder);
             </script>
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
