@@ -100,10 +100,8 @@ def process_registration():
             first_name=first_name,
             last_name=last_name,
             ucreated_at=ucreated_at)
-
         db.session.add(user)
         db.session.commit()
-
         session['user_id'] = user.user_id
         flash('You have successfully created an account.')
         return redirect('/')
@@ -117,7 +115,6 @@ def display_profile(user_id):
     friend_id_names = find_friends(user_id)
     sugg_id_names = suggest_friends(user_id)
     pend_id_names = pending_friends(user_id)
-
     if session['user_id'] == user.user_id:
         return render_template('profile.html', user=user, 
                                         friend_id_names=friend_id_names, 
@@ -139,7 +136,6 @@ def process_add_rest(user_id):
     no = request.form.get('no')
     tracking_review = request.form.get('tracking_review')
     tracking_note = request.form.get('tracking_note')
-
     if yes:
         response = True
     if no:
@@ -155,23 +151,8 @@ def filter_rest():
 
     user_id = session['user_id']
     user = User.query.get(user_id)
-    filter_by = request.args.get('visited')
-    print filter_by
-
-    v_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==True).all()
-    v_tracking_json = {'data' : []}
-    if len(v_trackings) > 0:
-        for tracking in v_trackings:
-            track_dict = {
-            "tracking_id" : tracking.tracking_id,
-            "visited" : "You've eaten here.",
-            "rest_name" : tracking.restaurant.rest_name,
-            "price" : int(tracking.restaurant.price),
-            "rating" : int(tracking.restaurant.rating),
-            "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
-            "photo" : tracking.restaurant.photo}
-            v_tracking_json['data'].append(track_dict)
-        return jsonify(v_tracking_json)
+    filter_by = request.args.get('filter')
+    return filter_trackings(user_id, user, filter_by)
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
@@ -253,23 +234,6 @@ def display_friend_profile():
     friend = User.query.get(friend_id)
     friend_id_names = find_friends(friend_id)
     rest_add = format_add(friend)
-    # TODO: Delete after you confirm that the function below still works
-    # when moved to a standalone function
-    #
-    #
-    # rest_add = []
-    # for ft in friend.trackings:
-    #     address = ''
-    #     if ft.restaurant.address != None:
-    #         formatted_add = ft.restaurant.address.split(',')
-    #         if formatted_add[-1] == ' United States':
-    #             for fa in formatted_add[:-1]:
-    #                 address = address + fa.encode('utf-8') + ','
-    #         else:
-    #             for fa in formatted_add:
-    #                 address = address + fa.encode('utf-8') + ','
-    #     rest_add.append(address[:-1])
-
     return render_template('friend.html', friend=friend, 
                                     rest_add=rest_add, 
                                     friend_id_names=friend_id_names)
@@ -277,6 +241,38 @@ def display_friend_profile():
 
 ###QUERIES & FUNCTIONS BELOW###
 ###TODO: Move to separate file###
+def filter_trackings(user_id, user, filter_by):
+    """Returns JSON for visited and not-yet-visited restaurants."""
+
+    if filter_by == "visited":
+        v_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==True).all()
+        v_tracking_json = {'data' : []}
+        if len(v_trackings) > 0:
+            for tracking in v_trackings:
+                track_dict = {
+                "tracking_id" : tracking.tracking_id,
+                "visited" : "You've eaten here.",
+                "rest_name" : tracking.restaurant.rest_name,
+                "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
+                "photo" : tracking.restaurant.photo}
+                v_tracking_json['data'].append(track_dict)
+            filtered_json = jsonify(v_tracking_json)
+    else:
+        nv_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==False).all()
+        nv_tracking_json = {'data' : []}
+        if len(nv_trackings) > 0:
+            for tracking in nv_trackings:
+                track_dict = {
+                "tracking_id" : tracking.tracking_id,
+                "visited" : "On your To-eat List.",
+                "rest_name" : tracking.restaurant.rest_name,
+                "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
+                "photo" : tracking.restaurant.photo}
+                nv_tracking_json['data'].append(track_dict)
+            filtered_json = jsonify(nv_tracking_json)
+    return filtered_json
+
+
 def create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review):
     """Checks for existing trackings and restaurants and adds new entries"""
 

@@ -104,12 +104,12 @@
                         <!-- Div for form -->
                             <div id="filter_list">
                                 <p>Filter By:</p>
-                                    <form action="/filter_rest" method="GET" name="filter_list" id="filter">
-                                        <select name="filter" id="select">
-                                            <option name="visited" value="visited">Visited</option>
-                                            <option name= "not_visited" value="not_visited">To-eat</option>
-                                            <input type="submit" id="submit_org" value="Filter">
+                                    <form action="/filter_rest" method="GET" id="filter_form">
+                                        <select id="filter_select">
+                                            <option value="visited">Visited</option>
+                                            <option value="not_visited">To-eat</option>
                                         </select>
+                                        <input type="submit" value="Filter"></input>
                                     </form>
                                 <br><br>
                             </div>
@@ -176,10 +176,15 @@
 
                     function orgRequest(evt) {
                         evt.preventDefault();
-                        $.get("/filter_rest", showOrg);
+                        var formInputs = {
+                            "filter" : $("#filter_select").val(),
+                        };
+                        $.get("/filter_rest",
+                            formInputs, 
+                            showOrg);
                     }
 
-                    $("#filter").on("submit", orgRequest);
+                    $("#filter_form").on("submit", orgRequest);
             </script>
         <div class='friend_details'>
             <h2 id="friend_header">To-eat List Friends</h2>
