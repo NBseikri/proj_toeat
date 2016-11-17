@@ -7,7 +7,8 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime
 import requests
 import decimal
-from functions import get_rest_info
+from google_functions import get_rest_info
+from helper_functions import create_user, filter_trackings, sort_trackings, format_add, find_friends, suggest_friends, pending_friends, accept_new_friend, request_new_friend
 from flask.ext.bcrypt import Bcrypt
 
 
@@ -38,8 +39,8 @@ def process_login():
 
     email = request.form.get('email')
     password = request.form.get('password')
-
     user_query = db.session.query(User).filter_by(email=email)
+
     try:
         user = user_query.one()
     except NoResultFound:
@@ -78,7 +79,7 @@ def display_registration_form():
 
 @app.route('/registration', methods=['POST'])
 def process_registration():
-    """Processes registration form"""
+    """Process registration form"""
 
     username = request.form.get('username')
     email = request.form.get('email').encode('utf-8')
@@ -87,21 +88,13 @@ def process_registration():
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
     ucreated_at = datetime.now()
-
     emails = User.query.filter_by(email=email).all()
 
     if emails:
         flash('An account is already associated with the email address you entered. Please login.')
         return redirect('/login')
-    else: 
-        user = User(username=username,
-            email=email,
-            password=encrypted_pw,
-            first_name=first_name,
-            last_name=last_name,
-            ucreated_at=ucreated_at)
-        db.session.add(user)
-        db.session.commit()
+    else:
+        user = create_user(username, email, encrypted_pw, first_name, last_name, ucreated_at)
         session['user_id'] = user.user_id
         flash('You have successfully created an account.')
         return redirect('/')
@@ -152,7 +145,7 @@ def filter_rest():
     user_id = session['user_id']
     user = User.query.get(user_id)
     filter_by = request.args.get('filter')
-    return filter_trackings(user_id, user, filter_by)
+    return filter_trackings(user_id, filter_by)
 
 @app.route('/sort_rest', methods=['GET'])
 def sort_rest():
@@ -160,34 +153,7 @@ def sort_rest():
     user_id = session['user_id']
     user = User.query.get(user_id)
     sort_by = request.args.get('sort')
-    print sort_by
-
-    # Ascending
-    # trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price).all()
-    # Descending
-    # trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price.desc()).all()
-
-    # if sort_by == "low_price":
-    #     l_trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price).all()
-    #     l_tracking_json = {'data' : []}
-    #     if len(l_trackings) > 0:
-    #         for tracking in l_trackings:
-    #             if tracking.visited == True:
-    #                 visited = "You've eaten here."
-    #             else:
-    #                 visited = "On your To-eat List."
-    #             track_dict = {
-    #             "tracking_id" : tracking.tracking_id,
-    #             "visited" : visited,
-    #             "rest_name" : tracking.restaurant.rest_name,
-    #             "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
-    #             "photo" : tracking.restaurant.photo}
-    #             l_tracking_json['data'].append(track_dict)
-    #         sorted_json = jsonify(l_tracking_json)
-    #     return sorted_json
-
-    return 'Hi'
-
+    return sort_trackings(user_id, sort_by)
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
@@ -273,43 +239,8 @@ def display_friend_profile():
                                     rest_add=rest_add, 
                                     friend_id_names=friend_id_names)
 
-
-###QUERIES & FUNCTIONS BELOW###
-###TODO: Move to separate file###
-def filter_trackings(user_id, user, filter_by):
-    """Returns JSON for visited and not-yet-visited restaurants."""
-
-    if filter_by == "visited":
-        v_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==True).all()
-        v_tracking_json = {'data' : []}
-        if len(v_trackings) > 0:
-            for tracking in v_trackings:
-                track_dict = {
-                "tracking_id" : tracking.tracking_id,
-                "visited" : "You've eaten here.",
-                "rest_name" : tracking.restaurant.rest_name,
-                "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
-                "photo" : tracking.restaurant.photo}
-                v_tracking_json['data'].append(track_dict)
-            filtered_json = jsonify(v_tracking_json)
-    else:
-        nv_trackings = Tracking.query.filter(Tracking.user_id==user.user_id, Tracking.visited==False).all()
-        nv_tracking_json = {'data' : []}
-        if len(nv_trackings) > 0:
-            for tracking in nv_trackings:
-                track_dict = {
-                "tracking_id" : tracking.tracking_id,
-                "visited" : "On your To-eat List.",
-                "rest_name" : tracking.restaurant.rest_name,
-                "tracking_url" : '/tracking/{}'.format(tracking.tracking_id),
-                "photo" : tracking.restaurant.photo}
-                nv_tracking_json['data'].append(track_dict)
-            filtered_json = jsonify(nv_tracking_json)
-    return filtered_json
-
-
 def create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review):
-    """Checks for existing trackings and restaurants and adds new entries"""
+    """Given user input, creates trackings and restaurants"""
 
     query = query.split(',')
     info = get_rest_info(query)
@@ -427,107 +358,6 @@ def create_trackings_and_rests(user_id, query, response, tracking_note, tracking
             # Creates new tracking object; inserts tracking into db
             flash('You have successfully added a restaurant.')
 
-
-def format_add(obj):
-    """Returns list of formatted addresses for restaurants"""
-
-    rest_add = []
-    for ot in obj.trackings:
-        address = ''
-        if ot.restaurant.address != None:
-            formatted_add = ot.restaurant.address.split(',')
-            if formatted_add[-1] == ' United States':
-                for fa in formatted_add[:-1]:
-                    address = address + fa.encode('utf-8') + ','
-            else:
-                for fa in formatted_add:
-                    address = address + fa.encode('utf-8') + ','
-        rest_add.append(address[:-1])
-
-    return rest_add
-
-def find_friends(user_id):
-    """Given a user_id, returns a list of tuples with a friend's user_id and full name"""
-
-    all_friends = Friend.query.filter(Friend.status==2).all()
-    
-    user_friends = []
-    for friend in all_friends:
-        if friend.friend_one == int(user_id):
-            user_friends.append(friend.friend_two)
-        elif friend.friend_two == int(user_id):
-            user_friends.append(friend.friend_one)
-
-    friend_id_names = []
-    for fid in user_friends:
-        other_friend = User.query.get(fid)
-        id_and_name = fid, (other_friend.first_name.encode('utf-8') + ' ' + other_friend.last_name.encode('utf-8'))
-        friend_id_names.append(id_and_name)
-
-    return friend_id_names
-
-def suggest_friends(passed_user_id):
-    """Given a user_id, returns a list of tuples with a suggested friend's user_id and full name"""
-
-    all_friends = Friend.query.all()
-    
-    user_friends = []
-    for friend in all_friends:
-        if friend.friend_one == int(passed_user_id):
-            user_friends.append(friend.friend_two)
-        elif friend.friend_two == int(passed_user_id):
-            user_friends.append(friend.friend_one)
-
-    others = User.query.filter(User.user_id!=passed_user_id).all()
-
-    sugg_id_names = []
-    for other in others:
-        if other.user_id not in user_friends:
-            id_and_name = other.user_id, (other.first_name.encode('utf-8') + ' ' + other.last_name.encode('utf-8'))
-            sugg_id_names.append(id_and_name)
-
-    return sugg_id_names
-
-def pending_friends(user_id):
-    """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
-
-    all_friends = db.session.query(Friend).filter_by(friend_two=user_id, status=1).all()
-    
-    user_friends = []
-
-    if all_friends:
-        for friend in all_friends:
-            user_friends.append(friend.friend_one)
-
-
-    friend_id_names = []
-    for fid in user_friends:
-        other_friend = User.query.get(fid)
-        id_and_name = fid, (other_friend.first_name.encode('utf-8') + ' ' + other_friend.last_name.encode('utf-8'))
-        friend_id_names.append(id_and_name)
-
-    return friend_id_names
-
-def accept_new_friend(accept_id, user_id):
-    # friend.accept_new_friend(accept_id)
-    # create a method on the Friend class instead of imported functions
-    """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
-
-    friendship = db.session.query(Friend).filter_by(friend_one=accept_id, friend_two=user_id, status=1).all()
-
-    friendship[0].status = 2
-    db.session.commit()
-
-def request_new_friend(user_id, request_id):
-    """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
-    current_time = datetime.now()
-    friend = Friend(friend_one=user_id, 
-                                friend_two=request_id, 
-                                status=1,
-                                fcreated_at=current_time)
-    db.session.add(friend)
-    db.session.commit()
-    
 
 if __name__ == "__main__":
 

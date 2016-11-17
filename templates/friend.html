@@ -13,9 +13,10 @@
                 {% for tracking in friend.trackings %}
                 <div class='rest_photo'>
                     <img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
-                <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
-                <p>{{ rest_add[count] }}</p>
-                    {% set count = count + 1 %}
+                <p>{{ tracking.restaurant.rest_name }}</p>
+<!--                 <p>{{ rest_add[count] }}</p>
+                    {% set count = count + 1 %} -->
+                    <p> {{ tracking.restaurant.city }} </p>
                     {% if tracking.visited %}
                         {% if tracking.tracking_review %}
                         <p>{{ friend.first_name }} visited this restaurant and wrote this review:</p>
