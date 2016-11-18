@@ -25,6 +25,8 @@ class MyAppUnitTestCase(TestCase):
         db.create_all()
         example_data()
 
+        #COMMENT
+
     def tearDown(self):
         """Do at end of every test."""
 
