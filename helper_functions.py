@@ -40,9 +40,8 @@ def filter_trackings(user_id, filter_by):
             "photo" : tracking.restaurant.photo,
             "city" : tracking.restaurant.city}
             tracking_json['data'].append(track_dict)
-            filtered_json = jsonify(tracking_json)
     
-    return filtered_json
+    return tracking_json
 
 def sort_trackings(user_id, sort_by):
     """Given user input, returns sorted trackings as JSON"""
@@ -71,9 +70,8 @@ def sort_trackings(user_id, sort_by):
             "photo" : tracking.restaurant.photo,
             "city" : tracking.restaurant.city}
             tracking_json['data'].append(track_dict)
-        sorted_json = jsonify(tracking_json) 
     
-    return sorted_json
+    return tracking_json
 
 def format_add(obj):
     """Returns list of formatted addresses for restaurants"""

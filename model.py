@@ -95,11 +95,66 @@ class Status(db.Model):
     status_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     status_code = db.Column(db.String(10), nullable=False)
 
+def example_data():
+    """Creates sample data for unittests to use"""
 
-def connect_to_db(app):
+    user1 = User(username="mgellar", 
+                email="monica@monica.com", 
+                password="$2b$12$HheQ3X.85awol9DLmPE6Ze2tpTaT.U1iCy1.BIKHPJebYoKCo6cOm", 
+                first_name="Monica", 
+                last_name="Monica", 
+                ucreated_at=datetime.now())
+
+    tracking1 = Tracking(user_id=1, 
+                rest_id=1, 
+                visited=True, 
+                tracking_note=None, 
+                tracking_review="I loved the savory bread pudding.", 
+                tcreated_at=datetime.now())
+
+    tracking2 = Tracking(user_id=1, 
+                rest_id=2, 
+                visited=False, 
+                tracking_note="The s'mores cake sounds fantastic.", 
+                tracking_review=None, 
+                tcreated_at=datetime.now())
+
+    restaurant1 = Restaurant(rest_name="Mr. Holmes Bakehouse", 
+                city="San Francisco",
+                address="1042 Larkin St, San Francisco, CA 94109, United States",
+                lat=37.7876365,
+                lng=-122.4182803,
+                photo="https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=CoQBdwAAALKdzsZZRxZKMABWW8M5vqJ370gpobkT5lGzTBpaeTyr_cynudP0n5TMaPYxn8fasSd2sGpkYwv6NmMeteCe32UJJsi7NuD4mdO7w4Q5fzx2ZX63onqjbgheoYt-lOVIsRIo-Ul7oXx55lIBZIgw4EnI7U5Hw0PAub6KHZkfBj53EhBkRETSGKZ8yUcT49thy6TaGhQ7v0xIe8nA-c1y6KeZbnJ30at9wg&key=AIzaSyDA_1IcTtbdm68wu8-OQUkChoe7FlXhVgc",
+                placeid="ChIJT0h_9pOAhYAR-3iNZNso3xk",
+                price=1,
+                rating=4.2,
+                bus_hours=None,
+                rest_review="Fantastic cruffins! Omg!",
+                rcreated_at=datetime.now())
+
+    restaurant2 = Restaurant(rest_name="Hot Cakes", 
+                city="Seattle",
+                address="1042 Market St, Seattle, WA 98000, United States",
+                lat=36.7876365,
+                lng=-120.4182803,
+                photo="https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=CmskewAAALKdzsZZRxZKMABWW8M5vqJ370gpobkT5lGzTBpaeTyr_cynudP0n5TMaPYxn8fasSd2sGpkYwv6NmMeteCe32UJJsi7NuD4mdO7w4Q5fzx2ZX63onqjbgheoYt-lOVIsRIo-Ul7oXx55lIBZIgw4EnI7U5Hw0PAub6KHZkfBj53EhBkRETSGKZ8yUcT49thy6TaGhQ7v0xIe8nA-c1y6KeZbnJ30at9wg&key=AIzaSyDA_1IcTtbdm68wu8-OQUkChoe7FlXhVgc",
+                placeid="CABCT0h_9pOAhYAR-3iNZNso3xk",
+                price=2,
+                rating=4.5,
+                bus_hours=None,
+                rest_review="The pistachio cardamom shake! Yum!",
+                rcreated_at=datetime.now())
+
+    db.session.add_all([user1, tracking1, tracking2, restaurant1, restaurant2])
+    db.session.add_all([])
+    db.session.commit()
+
+
+
+def connect_to_db(app, db_URI='postgresql:///toeat'):
     """Connect the database to Flask app."""
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///toeat'
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_URI
     # app.config['SQLALCHEMY_ECHO'] = True
     db.app = app
     db.init_app(app)

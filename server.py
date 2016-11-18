@@ -145,7 +145,7 @@ def filter_rest():
     user_id = session['user_id']
     user = User.query.get(user_id)
     filter_by = request.args.get('filter')
-    return filter_trackings(user_id, filter_by)
+    return jsonify(filter_trackings(user_id, filter_by))
 
 @app.route('/sort_rest', methods=['GET'])
 def sort_rest():
@@ -153,7 +153,7 @@ def sort_rest():
     user_id = session['user_id']
     user = User.query.get(user_id)
     sort_by = request.args.get('sort')
-    return sort_trackings(user_id, sort_by)
+    return jsonify(sort_trackings(user_id, sort_by))
 
 @app.route('/accept_friend', methods=['GET'])
 def process_accept_friend():
