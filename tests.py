@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime
 import decimal
 from flask.ext.bcrypt import Bcrypt
-from helper_functions import create_user, filter_trackings, sort_trackings
+from helper_functions import create_user, filter_trackings, sort_trackings, format_add
 
 class MyAppUnitTestCase(TestCase):
 
@@ -24,11 +24,6 @@ class MyAppUnitTestCase(TestCase):
         # Create tables and add sample data
         db.create_all()
         example_data()
-
-        #COMMENT
-        #ANOTHER COMMENT
-        #THIRD COMMENT
-        #FOURTH COMMENT
 
     def tearDown(self):
         """Do at end of every test."""
@@ -65,20 +60,10 @@ class MyAppUnitTestCase(TestCase):
             "photo" : "https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=CmskewAAALKdzsZZRxZKMABWW8M5vqJ370gpobkT5lGzTBpaeTyr_cynudP0n5TMaPYxn8fasSd2sGpkYwv6NmMeteCe32UJJsi7NuD4mdO7w4Q5fzx2ZX63onqjbgheoYt-lOVIsRIo-Ul7oXx55lIBZIgw4EnI7U5Hw0PAub6KHZkfBj53EhBkRETSGKZ8yUcT49thy6TaGhQ7v0xIe8nA-c1y6KeZbnJ30at9wg&key=AIzaSyDA_1IcTtbdm68wu8-OQUkChoe7FlXhVgc",
             "city" : "Seattle"}]}))
 
+    def test_format_add(self):
+        self.assertTrue(format_add(1), ["1042 Larkin St, San Francisco, CA", "1042 Market St, Seattle, WA 98000"])
 
-    # restaurant1 = Restaurant(rest_name="Mr. Holmes Bakehouse", 
-    #             city="San Francisco",
-    #             address="1042 Larkin St, San Francisco, CA 94109, United States",
-    #             lat=37.7876365,
-    #             lng=-122.4182803,
-    #             photo="https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=CoQBdwAAALKdzsZZRxZKMABWW8M5vqJ370gpobkT5lGzTBpaeTyr_cynudP0n5TMaPYxn8fasSd2sGpkYwv6NmMeteCe32UJJsi7NuD4mdO7w4Q5fzx2ZX63onqjbgheoYt-lOVIsRIo-Ul7oXx55lIBZIgw4EnI7U5Hw0PAub6KHZkfBj53EhBkRETSGKZ8yUcT49thy6TaGhQ7v0xIe8nA-c1y6KeZbnJ30at9wg&key=AIzaSyDA_1IcTtbdm68wu8-OQUkChoe7FlXhVgc",
-    #             placeid="ChIJT0h_9pOAhYAR-3iNZNso3xk",
-    #             price=1,
-    #             rating=4.2,
-    #             bus_hours=None,
-    #             rest_review="Fantastic cruffins! Omg!",
-    #             rcreated_at=datetim
-
+        # ["1042 Larkin St, San Francisco, CA", "1042 Market St, Seattle, WA 98000"]
 if __name__ == "__main__":
     import unittest
     unittest.main()

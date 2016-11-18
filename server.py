@@ -103,8 +103,8 @@ def process_registration():
 def display_profile(user_id):
     """Displays user's profile page"""
 
-    user = User.query.get(user_id)
-    rest_add = format_add(user) 
+    # user = User.query.get(user_id)
+    rest_add = format_add(user_id) 
     friend_id_names = find_friends(user_id)
     sugg_id_names = suggest_friends(user_id)
     pend_id_names = pending_friends(user_id)

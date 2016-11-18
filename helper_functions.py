@@ -73,14 +73,14 @@ def sort_trackings(user_id, sort_by):
     
     return tracking_json
 
-def format_add(obj):
+def format_add(user_id):
     """Returns list of formatted addresses for restaurants"""
-
+    user = User.query.get(user_id)
     rest_add = []
-    for ot in obj.trackings:
+    for ut in user.trackings:
         address = ''
-        if ot.restaurant.address != None:
-            formatted_add = ot.restaurant.address.split(',')
+        if ut.restaurant.address != None:
+            formatted_add = ut.restaurant.address.split(',')
             if formatted_add[-1] == ' United States':
                 for fa in formatted_add[:-1]:
                     address = address + fa.encode('utf-8') + ','
