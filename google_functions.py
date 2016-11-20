@@ -65,7 +65,7 @@ def get_rest_info(query):
     placeid = results_dict['place_id']
 
     # Price level from search
-    price = results_dict['price_level']
+    price = results_dict.get('price_level', None)
     if price == "":
         price = None
 
@@ -103,8 +103,9 @@ def get_rest_info(query):
         for review in reviews:
             text = review['text']
             if text != "": 
-                enc_text = text.encode("utf-8")
-                all_reviews = all_reviews + enc_text + '|'
+                # enc_text = text.encode("utf-8")
+                # all_reviews = all_reviews + enc_text + '|'
+                all_reviews = all_reviews + text + '|'
             else:
                 all_reviews = None
     else:

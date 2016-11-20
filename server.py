@@ -1,6 +1,6 @@
 import os
 from jinja2 import StrictUndefined
-from flask import Flask, jsonify, render_template, redirect, request, flash, session
+from flask import Flask, jsonify, render_template, redirect, request, flash, session, Markup
 from flask_debugtoolbar import DebugToolbarExtension
 from model import connect_to_db, db, User, Restaurant, Tracking, Friend, Status
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -8,7 +8,7 @@ from datetime import datetime
 import requests
 import decimal
 from google_functions import get_rest_info
-from helper_functions import create_user, filter_trackings, sort_trackings, format_add, find_friends, suggest_friends, pending_friends, accept_new_friend, request_new_friend
+from helper_functions import create_user, filter_trackings, sort_trackings, format_add, find_friends, suggest_friends, pending_friends, accept_new_friend, request_new_friend, delete_friend, tracking_cities
 from flask.ext.bcrypt import Bcrypt
 
 
@@ -21,7 +21,7 @@ bcrypt = Bcrypt(app)
 @app.route('/')
 def homepage():
     """Renders homepage"""
-    if session['user_id'] != None:
+    if session['user_id']:
         user_id = session['user_id']
         return redirect('/profile/{}'.format(user_id))
     else:
@@ -60,8 +60,8 @@ def process_login():
             return redirect('/login')
 
     else:
-        flash("""I'm sorry that email is not in our system. Please try again
-                or go to our registration page to create a new account.""")
+        # reg_link = Markup("<a href="/registration">registration page</a>")
+        flash("I'm sorry that email is not in our system. Please try again or go to our to create a new account.")
         return redirect('/login')
 
 @app.route('/logout')
@@ -103,20 +103,20 @@ def process_registration():
 def display_profile(user_id):
     """Displays user's profile page"""
 
-    # user = User.query.get(user_id)
-    rest_add = format_add(user_id) 
-    friend_id_names = find_friends(user_id)
-    sugg_id_names = suggest_friends(user_id)
-    pend_id_names = pending_friends(user_id)
+    user = User.query.get(user_id)
+    friend_id_names = find_friends(user.user_id)
+    sugg_id_names = suggest_friends(user.user_id)
+    pend_id_names = pending_friends(user.user_id)
+    cities = tracking_cities(user.user_id)
     if session['user_id'] == user.user_id:
         return render_template('profile.html', user=user, 
                                         friend_id_names=friend_id_names, 
                                         sugg_id_names=sugg_id_names,
                                         pend_id_names=pend_id_names,
-                                        key=key,
-                                        rest_add=rest_add)
+                                        cities=cities,
+                                        key=key)
     else: 
-        flash('You must be signed in to the correct account to view the page you requested. Please return to your profile or login.')
+        flash('Please return to your profile or login.')
         return redirect('/login')
 
 @app.route('/profile/<user_id>', methods=['POST'])
@@ -152,7 +152,15 @@ def sort_rest():
 
     user_id = session['user_id']
     user = User.query.get(user_id)
+    cities = tracking_cities(user.user_id)
     sort_by = request.args.get('sort')
+
+    if sort_by in cities:
+        for city in cities:
+            if sort_by == city:
+                sort_by = city
+                print sort_by
+
     return jsonify(sort_trackings(user_id, sort_by))
 
 @app.route('/accept_friend', methods=['GET'])
@@ -173,6 +181,15 @@ def process_request_friend():
     request_new_friend(user_id, request_id)
     return redirect('/profile/{}'.format(user_id))
 
+@app.route('/delete', methods=['GET'])
+def process_delete_friend():
+    """Deletes a friend from a user's friend list"""
+
+    user_id = session['user_id']
+    friend_id = request.args.get('friend_id')
+    delete_friend(user_id, friend_id)
+    return redirect('/profile/{}'.format(user_id))
+
 @app.route('/tracking/<tracking_id>')
 def display_tracked_rest(tracking_id):
     """Show details for a user's tracked restaurant."""
@@ -181,8 +198,11 @@ def display_tracked_rest(tracking_id):
     user = User.query.get(user_id)
     tracking = Tracking.query.get(tracking_id)
     address = tracking.restaurant.address
-    price = (int(tracking.restaurant.price))
-    price = '$' * price
+    if tracking.restaurant.price:
+        price = (int(tracking.restaurant.price))
+        price = '$' * price
+    else: 
+        price = None
     hours = tracking.restaurant.bus_hours
    
     formatted_add = address.split(',')
@@ -205,7 +225,7 @@ def display_tracked_rest(tracking_id):
 
     if db_reviews != None:
         for rev in db_reviews:
-            rev = rev.encode('utf-8')
+            # rev = rev.decode('utf-8')
             all_reviews.append(rev)
 
     return render_template('tracking.html', user=user, tracking=tracking, key=key, add_1=add_1, all_reviews=all_reviews, price=price, hours=hours)
@@ -234,7 +254,7 @@ def display_friend_profile():
     friend_id = request.args.get('friend_id')
     friend = User.query.get(friend_id)
     friend_id_names = find_friends(friend_id)
-    rest_add = format_add(friend)
+    rest_add = format_add(friend_id)
     return render_template('friend.html', friend=friend, 
                                     rest_add=rest_add, 
                                     friend_id_names=friend_id_names)
@@ -364,5 +384,5 @@ if __name__ == "__main__":
     app.debug = True
     app.jinja_env.auto_reload = True
     connect_to_db(app)
-    DebugToolbarExtension(app)
+    # DebugToolbarExtension(app)
     app.run(host="0.0.0.0", debug=True)

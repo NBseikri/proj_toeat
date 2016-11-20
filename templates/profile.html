@@ -30,71 +30,9 @@
                                <input type="submit" id="submit" value="Add Restaurant">
                         </div><br>
                 </form>
-                    <script>
-                    "use strict";
-                    $(document).ready(function(){
-                        $("#track").hide();
-                    });
 
-                    function toggleTrackingNote() {
-                       $("#track").toggle();
-                       if ($("#yes").attr("disabled") === 'disabled') {
-                        $("#yes").attr("disabled", false);
-                    }
-                    else {
-                        $("#yes").attr("disabled", true);
-                       }
-                    }
-
-                    $("#no").on('click', toggleTrackingNote);
-
-                    $(document).ready(function(){
-                        $("#review").hide();
-                    });
-
-                    function toggleReview() {
-                       $("#review").toggle();
-                    if ($("#no").attr("disabled") === 'disabled') {
-                        $("#no").attr("disabled", false);
-                    }
-                    else {
-                        $("#no").attr("disabled", true);
-                       }
-                    }
-
-                    $("#yes").on('click', toggleReview);
-                    </script>
 
                 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key={{ key }}&libraries=places"></script>
-
-                <script>
-                    var input = document.getElementById('searchTextField');
-                    var defaultBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(85, -180), 
-                        new google.maps.LatLng(-85, 180));
-                    var options = {
-                        bounds: defaultBounds,
-                        types: ['establishment']
-                    };
-                    var autocomplete = new google.maps.places.Autocomplete(input, options);
-                    autocomplete.addListener('place_changed', getDetails);
-                    function getDetails() {
-                        // Get the place details from the autocomplete object.
-                        var place = autocomplete.getPlace();
-                    }
-                </script>
-                <script>
-                    "use strict";
-                    $(document).ready(function(){
-                            $("#tracking_form").hide();
-                        });
-
-                    function toggleDiv() {
-                       $("#tracking_form").toggle();
-                    }
-
-                    $("#add_rest_header").on('click', toggleDiv);
-                </script>
 
                 <div class='rest_details'>
                 <!-- Div for all restaurant related info -->
@@ -123,6 +61,11 @@
                                             <option value="high_price">Price: High to Low</option>
                                             <option value="low_rating">Rating: Low to High</option>
                                             <option value="high_rating">Ratings: High to Low</option>
+                                            <option value="newest">Listings: Newest First</option>
+                                            <option value="oldest">Listings: Oldest First</option>
+                                            {% for city in cities %}
+                                            <option value="{{ city }}">Location: {{ city }}</option>
+                                            {% endfor %}
                                         </select>
                                         <input type="submit" value="Sort"></input>
                                     </form>
@@ -137,7 +80,6 @@
                                     <div class='rest_photo'><img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
                                     <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
                                     <p>{{ tracking.restaurant.city }}</p>
-                                {% set count = count + 1 %}
                                 {% if tracking.visited %}
                                     <p>You've eaten here.</p>
                                 {% else %}
@@ -153,63 +95,7 @@
                         <!-- Closes rest_list div -->
                 </div>
                 <!-- Closes rest_details div -->
-            <script>
-                    "use strict";
-                    $(document).ready(function(){
-                        $("#rest_list").hide();
-                    });
 
-                    function toggleDiv() {
-                       $("#rest_list").toggle();
-                    }
-
-                    $("#list_header").on('click', toggleDiv);
-
-                    function showOrg(result) {
-                        var data = result.data;
-                        $("#original_rest").empty();
-                        for (var i in data) {
-                            var photo = data[i]['photo'];
-                            var newPhotoHTML = ("<div class='rest_photo'><img src='" + photo + "'width='100' height='100'></a></div>");
-
-                            var id = data[i]['tracking_id'];
-                            var rest_name = data[i]['rest_name'];
-                            var newLink = ("<a href=/tracking/" + id + ">" + rest_name + "</a>");
-
-
-                            var visited = data[i]['visited'];
-                            var newVisit = ("<p>" + visited +"</p>");
-
-                            var city = data[i]['city'];
-                            var newCity = ("<p>" + city +"</p>");
-                            console.log(newCity)
-
-                            $("#original_rest").append(newPhotoHTML, newLink, newCity, newVisit);
-
-                        }
-                    }
-
-                    function orgRequest(evt) {
-                        evt.preventDefault();
-                        var formInputs = {
-                            "filter" : $("#filter_select").val(),
-                        };
-                        $.get("/filter_rest", formInputs, showOrg);
-                    }
-
-                    $("#filter_form").on("submit", orgRequest);
-
-
-                    function sortRequest(evt){
-                        evt.preventDefault();
-                        var sortInputs = {
-                            "sort" : $("#sort_select").val(),
-                        };
-                        $.get("/sort_rest", sortInputs, showOrg);
-                    }
-
-                    $("#sort_form").on("submit", sortRequest);
-            </script>
         <div class='friend_details'>
             <h2 id="friend_header">To-eat List Friends</h2>
             <div id="friend_info">
@@ -230,9 +116,14 @@
             <h4>Friend Requests</h4>
             {% if pend_id_names|length > 0 %}
                 {% for pend in pend_id_names %}
+                {{ pend[1] }}
                 <form action="/accept_friend" method="GET">
                     <input type="hidden" name="accept_id" value="{{ pend[0] }}">
-                    <input type="submit" value="Accept {{ pend[1] }}">
+                    <input type="submit" value="Accept">
+                </form>
+                <form action="/delete" method="GET">
+                    <input type="hidden" name="friend_id" value="{{ pend[0] }}">
+                    <input type="submit" value="Reject">
                 </form>
                 {% endfor %}
             {% else %}
@@ -252,20 +143,7 @@
                 <p>We don't have any friends to suggest at this time.</p>
             {% endif %}
             </div></div>
-            <script>
-                    "use strict";
-                    //Hiding and toggling divs
 
-                    $(document).ready(function(){
-                        $("#friend_info").hide();
-                    });
-
-                    function toggleDiv() {
-                       $("#friend_info").toggle();
-                    }
-
-                    $("#friend_header").on('click', toggleDiv);
-            </script>
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
 {% endif %}

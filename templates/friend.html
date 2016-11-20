@@ -5,7 +5,7 @@
         <a href="/logout">Logout</a><br>
         <a href="/profile/{{ session['user_id'] }}">My Profile</a><br>
 
- <div class='rest_details'>
+        <div class='rest_details'>
             <h2 id="list_header">{{ friend.first_name }}'s To-eat List Restaurants</h2>
             <div id="rest_list">
             {% if friend.trackings|length > 0 %}
@@ -30,7 +30,15 @@
                 {% endfor %}
             {% else %}
                 <p>{{ friend.first_name }} doesn't have any restaurants in their To-eat List.</p>
-            {% endif %}</div></div>
+            {% endif %}</div>
+        </div>
+        <div class='remove'>
+            <p>Manage Friendship</p>
+            <form action='/delete', method=['GET'], id='delete_friend'>
+                <input type="hidden" name="friend_id" value="{{ friend.user_id }}">
+                    {{ friend.first_name }} {{friend.last_name }} <input type="submit" value="Remove from Friends ">
+            </form>
+        </div>
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
 {% endif %}

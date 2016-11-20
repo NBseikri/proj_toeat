@@ -4,6 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from datetime import datetime
 import decimal
 from flask.ext.bcrypt import Bcrypt
+import random
 
 def create_user(username, email, encrypted_pw, first_name, last_name, ucreated_at):
     """Creates user instance""" 
@@ -43,6 +44,15 @@ def filter_trackings(user_id, filter_by):
     
     return tracking_json
 
+def tracking_cities(user_id):
+    """Given a user_id, returns a list of cities for which a user is tracking restaurants"""
+    all_cities = db.session.query(Restaurant.city).join(Tracking).filter(Tracking.user_id==1).group_by(Restaurant.city).all()
+    cities = []
+    for city in all_cities:
+        cities.append(city[0].encode('utf-8'))
+
+    return cities
+
 def sort_trackings(user_id, sort_by):
     """Given user input, returns sorted trackings as JSON"""
 
@@ -54,6 +64,21 @@ def sort_trackings(user_id, sort_by):
         trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.rating).all()
     elif sort_by == "high_rating":
         trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.rating.desc()).all()
+    elif sort_by == "newest":
+        trackings = Tracking.query.filter(Tracking.user_id==user_id).order_by(Tracking.tcreated_at.desc()).all()
+        print "NEWEST"
+        print "#####"
+        for tracking in trackings:
+            print tracking.restaurant.rest_name
+    elif sort_by == "oldest":
+        print "OLDEST"
+        print "#####"
+        trackings = Tracking.query.filter(Tracking.user_id==user_id).order_by(Tracking.tcreated_at).all()
+        for tracking in trackings:
+            print tracking.restaurant.rest_name
+    else:
+        trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id, Restaurant.city==sort_by).all()
+
         
     tracking_json = {'data' : []}
     if len(trackings) > 0:
@@ -108,7 +133,7 @@ def find_friends(user_id):
         other_friend = User.query.get(fid)
         id_and_name = fid, (other_friend.first_name.encode('utf-8') + ' ' + other_friend.last_name.encode('utf-8'))
         friend_id_names.append(id_and_name)
-
+    
     return friend_id_names
 
 def suggest_friends(passed_user_id):
@@ -132,7 +157,7 @@ def suggest_friends(passed_user_id):
             id_and_name = other.user_id, (other.first_name.encode('utf-8') + ' ' + other.last_name.encode('utf-8'))
             sugg_id_names.append(id_and_name)
 
-    return sugg_id_names
+    return random.sample(set(sugg_id_names), len(sugg_id_names)/2)
 
 def pending_friends(user_id):
     """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
@@ -172,3 +197,11 @@ def request_new_friend(user_id, request_id):
                                 fcreated_at=current_time)
     db.session.add(friend)
     db.session.commit()
+
+def delete_friend(user_id, friend_id):
+
+    friendship = db.session.query(Friend).filter_by(friend_one=friend_id, friend_two=user_id).first() or db.session.query(Friend).filter_by(friend_one=user_id, friend_two=friend_id).first()
+
+    db.session.delete(friendship)
+    db.session.commit()
+

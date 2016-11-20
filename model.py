@@ -102,22 +102,29 @@ def example_data():
                 email="monica@monica.com", 
                 password="$2b$12$HheQ3X.85awol9DLmPE6Ze2tpTaT.U1iCy1.BIKHPJebYoKCo6cOm", 
                 first_name="Monica", 
-                last_name="Monica", 
+                last_name="Gellar", 
                 ucreated_at=datetime.now())
 
-    tracking1 = Tracking(user_id=1, 
-                rest_id=1, 
-                visited=True, 
-                tracking_note=None, 
-                tracking_review="I loved the savory bread pudding.", 
-                tcreated_at=datetime.now())
+    user2 = User(username="cbing", 
+                email="chandler@chandler.com", 
+                password="$2b$13$HheQ3X.85awol9DLmPE6Ze2tpTaT.U1iCy1.BIKHPJebYoKCo6cOm", 
+                first_name="Chandler", 
+                last_name="Bing", 
+                ucreated_at=datetime.now())
 
-    tracking2 = Tracking(user_id=1, 
-                rest_id=2, 
-                visited=False, 
-                tracking_note="The s'mores cake sounds fantastic.", 
-                tracking_review=None, 
-                tcreated_at=datetime.now())
+    user3 = User(username="pbuffet", 
+                email="phoebe@phoebe.com", 
+                password="$2b$14$HheQ3X.85awol9DLmPE6Ze2tpTaT.U1iCy1.BIKHPJebYoKCo6cOm", 
+                first_name="Phoebe", 
+                last_name="Buffet", 
+                ucreated_at=datetime.now())
+
+    user4 = User(username="jtribiani", 
+                email="joey@joey.com", 
+                password="$2b$15$HheQ3X.85awol9DLmPE6Ze2tpTaT.U1iCy1.BIKHPJebYoKCo6cOm", 
+                first_name="Joey", 
+                last_name="Tribiani", 
+                ucreated_at=datetime.now())
 
     restaurant1 = Restaurant(rest_name="Mr. Holmes Bakehouse", 
                 city="San Francisco",
@@ -145,11 +152,43 @@ def example_data():
                 rest_review="The pistachio cardamom shake! Yum!",
                 rcreated_at=datetime.now())
 
-    db.session.add_all([user1, tracking1, tracking2, restaurant1, restaurant2])
-    db.session.add_all([])
+    db.session.add_all([restaurant1, restaurant2])
+    db.session.flush()
+
+
+    tracking1 = Tracking(user_id=user1.user_id, 
+                rest_id=restaurant1.rest_id, 
+                visited=True, 
+                tracking_note=None, 
+                tracking_review="I loved the savory bread pudding.", 
+                tcreated_at=datetime.now())
+
+    tracking2 = Tracking(user_id=user1.user_id, 
+                rest_id=restaurant2.rest_id, 
+                visited=False, 
+                tracking_note="The s'mores cake sounds fantastic.", 
+                tracking_review=None, 
+                tcreated_at=datetime.now())
+
+    status1 = Status(status_code="Pending")
+    
+    status2 = Status(status_code="Confirmed")
+
+    db.session.add_all([tracking1, tracking2, status1, status2])
+    db.session.flush()
+
+    friend1 = Friend(friend_one=user1.user_id, 
+                friend_two=user2.user_id, 
+                status=2, 
+                fcreated_at=datetime.now())
+
+    friend2 = Friend(friend_one=user1.user_id, 
+                friend_two=user3.user_id, 
+                status=1, 
+                fcreated_at=datetime.now())
+
+    db.session.add_all([friend1, friend2])
     db.session.commit()
-
-
 
 def connect_to_db(app, db_URI='postgresql:///toeat'):
     """Connect the database to Flask app."""

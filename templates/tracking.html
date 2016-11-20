@@ -9,7 +9,7 @@
 <!-- Div for just the name and tracking status. -->
 <div class='manage'>
   <p id='manage_entry'>Manage This To-Eat List Entry</p>
-  <form action='/manage/<tracking_id>', method=['GET'], id='tracking_form'>
+  <form action='/manage/<tracking_id>', method=['GET'], id='update_form'>
   {% if tracking.visited %}
     <input type="radio" name="update" value="Delete">Remove from Your To-eat List <br>
     <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
@@ -26,18 +26,7 @@
   src="https://code.jquery.com/jquery-3.1.1.min.js"
   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
   crossorigin="anonymous"></script>
-<script>
-    "use strict";
-    $(document).ready(function(){
-            $("#tracking_form").hide();
-        });
 
-    function toggleForm() {
-       $("#tracking_form").toggle();
-    }
-
-    $("#manage_entry").on('click', toggleForm);
-</script>
   <div class='header_details'>
     {% if tracking.visited %}
         <h4 id='status'>You've visited this restaurant.</h4>
@@ -50,8 +39,9 @@
 <!-- Empty map to be populated by JS script below. -->
     <div id='map'></div>
       <script src="https://code.jquery.com/jquery.js"></script>
+      
 <!--       JS code for map -->
-      <script>
+<!--       <script>
       function initMap() {
               var restLocation = {
                 lat: {{ tracking.restaurant.lat }}, 
@@ -68,7 +58,7 @@
                 map: map
               });
             }
-      </script>
+      </script> -->
 <!--       Google Maps lib as src -->
       <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script>
       <p> {{ add_1 }} </p>
@@ -93,7 +83,9 @@
 <!-- Restaurant info from Google -->
   <div class='restaurant_details'>
     <h4>Restaurant Details</h4>
+    {% if tracking.restaurant.price %}
     <p id='price'> Price Level: {{ price }} out of $$$$</p>
+    {% endif %}
     <p id='google_user'> Google User Rating: {{ tracking.restaurant.rating }} out of 5.0</p>
     <p id='google_text'> Google User Reviews:</p>
         {% for rev in all_reviews %}
