@@ -102,7 +102,7 @@ def get_rest_info(query):
     if reviews != []:
         for review in reviews:
             text = review['text']
-            if text != "": 
+            if text: 
                 # enc_text = text.encode("utf-8")
                 # all_reviews = all_reviews + enc_text + '|'
                 all_reviews = all_reviews + text + '|'

@@ -15,9 +15,15 @@
     <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
     <input type="submit" value="Submit"></form>
   {% else %}
-    <input type="radio" name="update" value="True">Mark as Visited<br>
+    <input type="radio" name="update" value="True" id="update_visited">Mark as Visited<br>
     <input type="radio" name="update" value="Delete">Remove from Your To-eat List<br>
     <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
+      <div id="update_review">
+        Add a Review: <input id="up_tracking_review" type="text" name="up_tracking_review"
+           cols="40" 
+           rows="5" 
+           style="width:400px; height:50px;">
+      </div>
     <input type="submit" value="Submit"></form>
   {% endif %}
 </div>
@@ -39,6 +45,8 @@
 <!-- Empty map to be populated by JS script below. -->
     <div id='map'></div>
       <script src="https://code.jquery.com/jquery.js"></script>
+      <article id="latlng" data-lat="{{ tracking.restaurant.lat }}" 
+      data-lng="{{ tracking.restaurant.lng}}"></article>
       
 <!--       JS code for map -->
 <!--       <script>
@@ -60,7 +68,7 @@
             }
       </script> -->
 <!--       Google Maps lib as src -->
-      <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script>
+<!--       <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script> -->
       <p> {{ add_1 }} </p>
       {% if hours != None %}
         <p> {{ hours }} </p>
@@ -86,16 +94,21 @@
     {% if tracking.restaurant.price %}
     <p id='price'> Price Level: {{ price }} out of $$$$</p>
     {% endif %}
+    {% if tracking.restaurant.rating %}
     <p id='google_user'> Google User Rating: {{ tracking.restaurant.rating }} out of 5.0</p>
+    {% endif %}
+    {% if all_reviews %}
     <p id='google_text'> Google User Reviews:</p>
         {% for rev in all_reviews %}
           {% if rev|length > 0%}
             <div class='rev'>"{{ rev }}"</div><br>
           {% endif %}
-        {% endfor %}    
+        {% endfor %}
+    {% endif %}    
   </div>
 <!-- Has user login if there is no user_id in session. -->
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
 {% endif %}
+<!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script> -->
 {% endblock %}

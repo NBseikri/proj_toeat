@@ -219,11 +219,10 @@ def display_tracked_rest(tracking_id):
     add_1 = add_1[:-1]
 
     db_reviews = tracking.restaurant.rest_review
-    db_reviews = db_reviews.split('|')
-
     all_reviews = []
-
-    if db_reviews != None:
+  
+    if db_reviews:
+        db_reviews = db_reviews.split('|')
         for rev in db_reviews:
             # rev = rev.decode('utf-8')
             all_reviews.append(rev)
@@ -236,10 +235,15 @@ def manage_tracking(tracking_id):
     user_id = session['user_id']
     update = request.args.get('update')
     tracking_id = request.args.get('tracking_id')
+    updated_review = request.args.get('up_tracking_review')
     managed_tracking = Tracking.query.get(tracking_id)
    
     if update == 'True':
         managed_tracking.visited = True
+        if len(updated_review) > 0 and updated_review != " ":
+            managed_tracking.tracking_review = updated_review
+        else: 
+            managed_tracking.tracking_review = None
         db.session.commit()
     elif update == 'Delete':
         db.session.delete(managed_tracking)
@@ -267,7 +271,7 @@ def create_trackings_and_rests(user_id, query, response, tracking_note, tracking
     # Using separate function, gets all restaurant details from Google Places
     rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
     # Unpacks all information into separate variables for use in db insertions below
-    rest_review = rest_review.encode('utf-8')
+    # rest_review = rest_review.encode('utf-8')
     current_time = datetime.now()
     # Current time for db insertions below
     match = Restaurant.query.filter_by(rest_name=query[0]).all()
