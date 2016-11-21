@@ -111,4 +111,5 @@ def get_rest_info(query):
     else:
         all_reviews = None
     
+    print rest_name, city, address, lat, lng, photo_url, placeid, price, rating, bus_hours, all_reviews
     return rest_name, city, address, lat, lng, photo_url, placeid, price, rating, bus_hours, all_reviews

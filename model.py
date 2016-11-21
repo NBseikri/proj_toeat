@@ -152,7 +152,7 @@ def example_data():
                 rest_review="The pistachio cardamom shake! Yum!",
                 rcreated_at=datetime.now())
 
-    db.session.add_all([restaurant1, restaurant2])
+    db.session.add_all([user1, user2, user3, user4, restaurant1, restaurant2])
     db.session.flush()
 
 

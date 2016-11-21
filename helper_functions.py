@@ -18,13 +18,130 @@ def create_user(username, email, encrypted_pw, first_name, last_name, ucreated_a
     db.session.commit()
     return user
 
+#NEW - FAILED TEST
+def create_tracking(user_id, rest_id, visited, tracking_note, tracking_review, tcreated_at):
+    tracking = Tracking(user_id=user_id,
+        rest_id=rest_id,
+        visited=visited,
+        tracking_note=tracking_note,
+        tracking_review=tracking_review,
+        tcreated_at=tcreated_at)
+    db.session.add(tracking)
+    db.session.commit()
+    return tracking
+    
+#NEW - NEEDS TEST
+def create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review, current_time):
+    restaurant = Restaurant(rest_name=rest_name, 
+                                city=city, 
+                                address=address, 
+                                lat=lat, 
+                                lng=lng, 
+                                photo=photo, 
+                                placeid=placeid, 
+                                price=price, 
+                                rating=rating, 
+                                bus_hours=bus_hours, 
+                                rest_review=rest_review,
+                                rcreated_at=current_time)
+    db.session.add(restaurant)
+    db.session.commit()
+    return restaurant
+
+#NEW - NEEDS TEST
+def create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review):
+    """Given user input, creates trackings and restaurants"""
+
+    query = query.split(',')
+    info = get_rest_info(query)
+    # Using separate function, gets all restaurant details from Google Places
+    rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
+    # Unpacks all information into separate variables for use in db insertions below
+    # rest_review = rest_review.encode('utf-8')
+    current_time = datetime.now()
+    # Current time for db insertions below
+    match = get_match(query)
+    # Gets a list of all restaurant objects that have a name that
+    # matches the queried restaurant.
+    if len(match) == 1:
+    # Handles when there is one match for the query in the db.
+        rest = match[0]
+        # Isolates the single object in the match list
+        all_trackings = get_all_trackings(user_id, rest.rest_id)
+        # Gets a list of all tracking objects that 
+        # have the user's user_id and the queried rest's rest_id
+        if len(all_trackings) == 1:
+        # Handles when there is already one tracking for the restaurant
+            flash('This restaurant already exists in your To-eat List.')
+        elif len(all_trackings) == 0:
+        # Handles when there is no tracking for the restaurant
+            if response == False:
+                # Handles if user has not been the restaurant
+                if len(tracking_note) == 0:
+                    tracking_note = None
+                    # Converts an empty tracking note to None for db consistency
+                create_tracking(user_id, rest.rest_id, False, tracking_note, None, current_time)
+                # Creates a new tracking object; inserts tracking into db 
+                flash('You have successfully added a restaurant.')
+                # Confirms update upon redirect
+            elif response == True:
+                # Handles when a user has been to a restaurant
+                if len(tracking_review) == 0:
+                    tracking_review = None
+                    # Converts an empty tracking review to None for db consistency
+                create_tracking(user_id, rest.rest_id, True, None, tracking_review, current_time)
+                # Creates a new tracking object; insterts tracking into db
+                flash('You have successfully added a restaurant.')
+                # Confirms update upon redirect
+    elif len(match) == 0:
+    # Isolates the single object in the match list.
+    # Handles when there are no matches for the query in the db.
+    # Inserts into both restaurants table and trackings tables.
+    # When there is no match in the restaurants table, there is necessarily
+    # no tracking for that queried restaurant. 
+        restaurant = create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review, current_time)
+        # Creates a new restaurant object
+        new_rest_id = restaurant.rest_id
+        # Gets newly created rest_id for the tracking instantiations below
+        if response == False:
+            # Handles if the user has not been to a restaurant
+            if len(tracking_note) == 0:
+                tracking_note = None
+                # Converts an empty tracking note to None for db consistency
+            create_tracking(user_id, new_rest_id, False, tracking_note, None, current_time)
+            # Creates a new tracking object; insterts tracking into db
+            flash('You have successfully added a restaurant.')
+            # Confirms update upon redirect
+        elif response == True:
+            # Handles if the user has been to a restaurant
+            if len(tracking_review) == 0:
+                tracking_review = None
+                # Converts to an empty tracking review to None for db consistency
+            create_tracking(user_id, restaurant.rest_id, True, None, tracking_review, current_time)
+            # Creates new tracking object; inserts tracking into db
+            flash('You have successfully added a restaurant.')
+
+#NEW - NEEDS TEST
+def get_all_trackings(user_id, rest_id):
+
+    return db.session.query(Tracking).filter_by(user_id=user_id, rest_id=rest_id).all()
+
+#NEW - NEEDS TEST
+def get_match(query):
+
+    match = Restaurant.query.filter_by(rest_name=query[0]).all()
+    return match
+
 def filter_trackings(user_id, filter_by):
     """Given user input, returns filtered trackings as JSON"""
 
     if filter_by == "visited":
         trackings = Tracking.query.filter(Tracking.user_id==user_id, Tracking.visited==True).all()
-    else:
+    elif filter_by == "not_visited":
         trackings = Tracking.query.filter(Tracking.user_id==user_id, Tracking.visited==False).all()
+    else:
+        trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id, Restaurant.city==filter_by).all()
+
 
     tracking_json = {'data' : []}
     if len(trackings) > 0:
@@ -46,7 +163,7 @@ def filter_trackings(user_id, filter_by):
 
 def tracking_cities(user_id):
     """Given a user_id, returns a list of cities for which a user is tracking restaurants"""
-    all_cities = db.session.query(Restaurant.city).join(Tracking).filter(Tracking.user_id==1).group_by(Restaurant.city).all()
+    all_cities = db.session.query(Restaurant.city).join(Tracking).filter(Tracking.user_id==user_id).group_by(Restaurant.city).all()
     cities = []
     for city in all_cities:
         cities.append(city[0].encode('utf-8'))
@@ -66,19 +183,8 @@ def sort_trackings(user_id, sort_by):
         trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.rating.desc()).all()
     elif sort_by == "newest":
         trackings = Tracking.query.filter(Tracking.user_id==user_id).order_by(Tracking.tcreated_at.desc()).all()
-        print "NEWEST"
-        print "#####"
-        for tracking in trackings:
-            print tracking.restaurant.rest_name
     elif sort_by == "oldest":
-        print "OLDEST"
-        print "#####"
         trackings = Tracking.query.filter(Tracking.user_id==user_id).order_by(Tracking.tcreated_at).all()
-        for tracking in trackings:
-            print tracking.restaurant.rest_name
-    else:
-        trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id, Restaurant.city==sort_by).all()
-
         
     tracking_json = {'data' : []}
     if len(trackings) > 0:
@@ -157,7 +263,10 @@ def suggest_friends(passed_user_id):
             id_and_name = other.user_id, (other.first_name.encode('utf-8') + ' ' + other.last_name.encode('utf-8'))
             sugg_id_names.append(id_and_name)
 
-    return random.sample(set(sugg_id_names), len(sugg_id_names)/2)
+    if len(sugg_id_names) >= 5:
+        return random.sample(set(sugg_id_names), 5)
+    else:
+        return sugg_id_names
 
 def pending_friends(user_id):
     """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
@@ -189,7 +298,7 @@ def accept_new_friend(accept_id, user_id):
     db.session.commit()
 
 def request_new_friend(user_id, request_id):
-    """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
+    """Accept a friend request by creating a friend object with a pending status (1)"""
     current_time = datetime.now()
     friend = Friend(friend_one=user_id, 
                                 friend_two=request_id, 

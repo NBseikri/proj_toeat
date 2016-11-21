@@ -44,8 +44,11 @@
                                 <p>Filter By:</p>
                                     <form action="/filter_rest" method="GET" id="filter_form">
                                         <select id="filter_select">
-                                            <option value="visited">Visited</option>
-                                            <option value="not_visited">To-eat</option>
+                                            <option value="visited">Status: Visited</option>
+                                            <option value="not_visited">Status: To-eat</option>
+                                            {% for city in cities %}
+                                            <option value="{{ city }}">Location: {{ city }}</option>
+                                            {% endfor %}
                                         </select>
                                         <input type="submit" value="Filter"></input>
                                     </form>
@@ -60,12 +63,9 @@
                                             <option value="low_price">Price: Low to High</option>
                                             <option value="high_price">Price: High to Low</option>
                                             <option value="low_rating">Rating: Low to High</option>
-                                            <option value="high_rating">Ratings: High to Low</option>
+                                            <option value="high_rating">Rating: High to Low</option>
                                             <option value="newest">Listings: Newest First</option>
                                             <option value="oldest">Listings: Oldest First</option>
-                                            {% for city in cities %}
-                                            <option value="{{ city }}">Location: {{ city }}</option>
-                                            {% endfor %}
                                         </select>
                                         <input type="submit" value="Sort"></input>
                                     </form>

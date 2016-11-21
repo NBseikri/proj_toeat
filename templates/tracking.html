@@ -68,12 +68,8 @@
             }
       </script> -->
 <!--       Google Maps lib as src -->
-<!--       <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script> -->
-      <p> {{ add_1 }} </p>
-      {% if hours != None %}
-        <p> {{ hours }} </p>
-      {% endif %}
-  </div>
+      <script src="https://maps.googleapis.com/maps/api/js?key={{ key }}"></script>
+      <div> {{ add_1 }} </div>
 <!-- Tracking-specific information -->
   <div class='user_details'>
       {% if tracking.visited %}
@@ -110,5 +106,4 @@
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
 {% endif %}
-<!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ key }}&callback=initMap"></script> -->
 {% endblock %}
