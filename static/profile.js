@@ -46,6 +46,20 @@ function toggleDiv() {$("#tracking_form").toggle();}
 
 $("#add_rest_header").on('click', toggleDiv);
 
+// FORM VALIDATION ATTEMPT
+// function validateSearchForm() {
+//    var x = document.forms["tracking_form"]["search"].value;
+//    if (x == "") {
+//        alert("Fields must be filled out");
+//        return false;
+//    }
+// }
+
+// validateSearchForm();
+//
+//
+//
+//
 // Restaurant List Div
 $(document).ready(function(){$("#rest_list").hide();});
 
