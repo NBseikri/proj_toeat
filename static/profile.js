@@ -98,9 +98,61 @@ function sortRequest(evt){
 
 $("#sort_form").on("submit", sortRequest);
 
-// Friends Div
+// Friend Div
 $(document).ready(function(){$("#friend_info").hide();});
 
 function toggleFriendDiv() {$("#friend_info").toggle();}
 
 $("#friend_header").on('click', toggleFriendDiv);
+
+// AJAX ATTEMPTS FOR FRIEND RELATIONSHIPS
+// 
+// 
+// 
+// 
+// Accept Friends 
+// function showCurrentFriends(result) {
+//     console.log('starting');
+//     $("#reject").empty();
+//     $("#accept").empty();
+
+//     var newFriend = ("<form action='/friend_profile' method='GET><input type='hidden' name='" + result[friend_id] +"value='" + result[name]+ "'><input type='submit' value='" + result[name] + "'></form>");
+
+//     $("#current_friends").append(newFriend);
+//     console.log('ending');
+
+//     }
+// }
+
+
+// function acceptRequest(evt) {
+//     evt.preventDefault();
+//     var acceptInputs = {
+//         "accept_id" : $("#accept_id").val(),
+//     };
+//     $.get("/accept_friend", acceptInputs, showCurrentFriends);
+// }
+
+// $("#accept").on("submit", acceptRequest);
+
+
+
+
+// // Add Sugg Friends
+// function requestSuggFriend(result) {
+//     $("WHATEVER ID IS").empty();
+
+//         var newSuggFriend = ("<form action='/friend_profile' method='GET><input type='hidden' name='" + result[friend_id] +"value='" + result[name]+ "'><input type='submit' value='" + result[name] + "'></form>");
+
+//     }
+// }
+
+// function suggRequest(evt) {
+//     evt.preventDefault();
+//     var formInputs = {
+//         "filter" : $("WHATEVER ID IS").val(),
+//     };
+//     $.get("/WHATEVER ROUTE IS", formInputs, requestSuggFriends);
+// }
+
+// $("WHATEVER ID IS").on("submit", suggRequest); 

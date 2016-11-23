@@ -11,7 +11,7 @@
   crossorigin="anonymous"></script>
     <h1>Welcome, {{ user.first_name }}!</h1>
         <div class="add_rest">
-            <h2 id="add_rest_header">Add a Restaurant to your To-eat List</h2>
+            <h2 id="add_rest_header">Add a Restaurant</h2>
                 <form action="/profile/<user_id>" method="POST" id="tracking_form">
                     Search for a Restaurant 
                         <input id="searchTextField" type="text" name="search"><br>
@@ -36,7 +36,7 @@
 
                 <div class='rest_details'>
                 <!-- Div for all restaurant related info -->
-                    <h2 id="list_header">Your To-eat List Restaurants</h2>
+                    <h2 id="list_header">To-eat List</h2>
                     <!-- Div for form and original_list -->
                         <div id="rest_list">
                         <!-- Div for form -->
@@ -77,15 +77,17 @@
                                 {% if user.trackings|length > 0 %}
                                 {% set count = 0 %}
                                 {% for tracking in user.trackings %}
+<!--                                 <article class="white-panel"> <img src="{{ tracking.restaurant.photo}}" width="100" height="100" alt="ALT"> -->
                                     <div class='rest_photo'><img src="{{ tracking.restaurant.photo}}" width="100" height="100"></a></div>
                                     <a href="/tracking/{{ tracking.tracking_id }}">{{ tracking.restaurant.rest_name }}</a>
                                     <p>{{ tracking.restaurant.city }}</p>
-                                {% if tracking.visited %}
-                                    <p>You've eaten here.</p>
-                                {% else %}
-                                    <p>On your To-eat List.</p>
-                                {% endif %}
+                                    {% if tracking.visited %}
+                                        <p>You've eaten here.</p>
+                                    {% else %}
+                                        <p>On your To-eat List.</p>
+                                    {% endif %}
                                 {% endfor %}
+                                </article>
                                 {% else %}
                                     <p>You don't have any restaurants in your To-eat List.</p>
                                 {% endif %}
@@ -116,15 +118,17 @@
             <h4>Friend Requests</h4>
             {% if pend_id_names|length > 0 %}
                 {% for pend in pend_id_names %}
-                {{ pend[1] }}
-                <form action="/accept_friend" method="GET">
-                    <input type="hidden" name="accept_id" value="{{ pend[0] }}">
-                    <input type="submit" value="Accept">
+                <!-- {{ pend[1] }}
+ -->                <form action="/accept_friend" method="GET">
+                    {{ pend[1] }}<br>
+                    <input type="hidden" id="accept_id" name="accept_id" value="{{ pend[0] }}">
+                    <input type="submit" id="accept" value="Accept">
                 </form>
                 <form action="/delete" method="GET">
                     <input type="hidden" name="friend_id" value="{{ pend[0] }}">
-                    <input type="submit" value="Reject">
+                    <input type="submit" id="reject"value="Reject">
                 </form>
+                <br>
                 {% endfor %}
             {% else %}
                 <p>You do not have any friend requests at this time.</p>

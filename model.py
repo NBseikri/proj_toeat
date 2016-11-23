@@ -182,13 +182,16 @@ def example_data():
                 status=2, 
                 fcreated_at=datetime.now())
 
-    friend2 = Friend(friend_one=user1.user_id, 
-                friend_two=user3.user_id, 
+    friend2 = Friend(friend_one=user3.user_id, 
+                friend_two=user1.user_id, 
                 status=1, 
                 fcreated_at=datetime.now())
 
     db.session.add_all([friend1, friend2])
     db.session.commit()
+
+    test_friendship = Friend.query.all()
+    print '####', test_friendship,'####'
 
 def connect_to_db(app, db_URI='postgresql:///toeat'):
     """Connect the database to Flask app."""

@@ -40,36 +40,17 @@
         <h4 id='status'>This restaurant is on your To-eat List.</h4>
     {% endif %}
   </div>
-<!-- Div for just the map and business hours (if business hours are available). -->
+
+
+<!-- Div for location (map and address) -->
   <div class='location'>
 <!-- Empty map to be populated by JS script below. -->
     <div id='map'></div>
-      <script src="https://code.jquery.com/jquery.js"></script>
       <article id="latlng" data-lat="{{ tracking.restaurant.lat }}" 
       data-lng="{{ tracking.restaurant.lng}}"></article>
-      
-<!--       JS code for map -->
-<!--       <script>
-      function initMap() {
-              var restLocation = {
-                lat: {{ tracking.restaurant.lat }}, 
-                lng: {{ tracking.restaurant.lng }} 
-            };
-
-              var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 13,
-                center: restLocation
-              });
-
-              var marker = new google.maps.Marker({
-                position: restLocation,
-                map: map
-              });
-            }
-      </script> -->
-<!--       Google Maps lib as src -->
       <script src="https://maps.googleapis.com/maps/api/js?key={{ key }}"></script>
-      <div> {{ add_1 }} </div>
+<!-- Div for the restaurant address -->
+    <div> {{ add_1 }} </div>
 <!-- Tracking-specific information -->
   <div class='user_details'>
       {% if tracking.visited %}
@@ -84,6 +65,8 @@
         {% endif %}
     {% endif %}
   </div>
+<!-- End of location div -->
+
 <!-- Restaurant info from Google -->
   <div class='restaurant_details'>
     <h4>Restaurant Details</h4>
