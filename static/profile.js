@@ -79,14 +79,15 @@ function showOrg(result) {
         var rest_name = data[i]['rest_name'];
         var newLink = ("<a href=/tracking/" + id + ">" + rest_name + "</a>");
 
-
         var visited = data[i]['visited'];
-        var newVisit = ("<p>" + visited +"</p>");
+        if (visited === "On your To-eat List") {
+        var newVisit = ("<p id='rep_visited' font-family='Roboto Condensed'>" + visited +" <span class='glyphicon glyphicon-unchecked'></p>");
+        }
+        else {
+        var newVisit = ("<p id='rep_visited' font-family='Roboto Condensed'>" + visited +" <span class='glyphicon glyphicon-check'></p>");    
+        }
 
-        var city = data[i]['city'];
-        var newCity = ("<p>" + city +"</p>");
-
-        $("#original_rest").append(newPhotoHTML, newLink, newCity, newVisit);
+        $("#original_rest").append(newPhotoHTML, newLink, newVisit);
 
     }
 }

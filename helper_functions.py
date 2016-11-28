@@ -147,9 +147,9 @@ def filter_trackings(user_id, filter_by):
     if len(trackings) > 0:
         for tracking in trackings:
             if tracking.visited == True:
-                visited = "You've eaten here."
+                visited = "You've eaten here"
             else:
-                visited = "On your To-eat List."
+                visited = "On your To-eat List"
             track_dict = {
             "tracking_id" : tracking.tracking_id,
             "visited" : visited,
