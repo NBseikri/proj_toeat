@@ -100,7 +100,7 @@ def display_profile(user_id):
     pend_id_names = pending_friends(user.user_id)
     cities = tracking_cities(user.user_id)
     if session['user_id'] == user.user_id:
-        return render_template('profile.html', user=user, 
+        return render_template('profile2.html', user=user, 
                                         friend_id_names=friend_id_names, 
                                         sugg_id_names=sugg_id_names,
                                         pend_id_names=pend_id_names,

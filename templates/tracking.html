@@ -89,18 +89,24 @@ h2 {
   transition: background 0.3s ease-in-out;
 }
 
-.inline {
-  display: inline-block;
-}
-
 #update_review {
   width: 400px; 
   height: 50px;
 }
 
+.container {
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+}
+
+.inline {
+  display: inline-block;
+  width: 50%;
+}
+
 #map {
-  height: 500px;
-  width: 500px;
+  height: 800px;
        }
 
 #address {
@@ -192,35 +198,24 @@ h2 {
 {% else %}
 <h2 id='status'>This restaurant is on your To-eat List.</h2>
 {% endif %}
-<!-- Manage To-eat Listing -->
-<!-- <div class='manage'>
-  <p id='manage_entry'>Manage To-eat Listing</p>
-  <form action='/manage/<tracking_id>', method=['GET'], id='update_form'>
-  {% if tracking.visited %}
-    <input type="radio" name="update" value="Delete"> Remove from Your To-eat List <br>
-    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
-    <input type="submit" value="Submit"></form>
-  {% else %}
-    <input type="radio" name="update" value="True" id="update_visited"> Mark as Visited<br>
-    <input type="radio" name="update" value="Delete"> Remove from Your To-eat List<br>
-    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
-      <div id="update_review">
-      Add a Review: <input id="up_tracking_review" type="text" name="up_tracking_review">
-      </div>
-      <br>
-    <input type="submit" value="Submit"></form>
-  {% endif %}
-</div> -->
+<br>
+<br>
+<br>
+
 <!-- Map and Address -->
-  <div class='inline'>
+<div class="container-fluid">
+<div class="row">
+
+  <div class='col-xs-12 col-md-6'>
       <div id='address'><span class="glyphicon glyphicon-map-marker"></span> {{ add_1 }}</div>
-      <div id='map'></div>
+      <div class='col-xs-12' id='map'></div>
       <article id="latlng" data-lat="{{ tracking.restaurant.lat }}" 
       data-lng="{{ tracking.restaurant.lng}}"></article>
       <script src="https://maps.googleapis.com/maps/api/js?key={{ key }}"></script>
   </div>
+
 <!-- Manage, User Details and Restaurant Details -->
-  <div class='inline'>
+  <div class='col-xs-12 col-md-6'>
     <div class='user_details'>
         {% if tracking.visited %}
           {% if tracking.tracking_review != None %}
@@ -234,6 +229,7 @@ h2 {
           {% endif %}
       {% endif %}
     </div>
+
     <div class='restaurant_details'>
       <p class='title'>Restaurant Details</p>
       {% if tracking.restaurant.price %}
@@ -252,6 +248,8 @@ h2 {
       {% endif %}  
     </div>
   </div>
+  </div>
+</div>
 <!-- Has user login if there is no user_id in session. -->
 {% else %}
     <a id='login_link' href="/login">Please login.</a>

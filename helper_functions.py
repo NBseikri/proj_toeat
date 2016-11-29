@@ -18,7 +18,6 @@ def create_user(username, email, encrypted_pw, first_name, last_name, ucreated_a
     db.session.commit()
     return user
 
-#NEW - FAILED TEST
 def create_tracking(user_id, rest_id, visited, tracking_note, tracking_review, tcreated_at):
     tracking = Tracking(user_id=user_id,
         rest_id=rest_id,
@@ -48,85 +47,11 @@ def create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price,
     db.session.commit()
     return restaurant
 
-#NEW - NEEDS TEST
-# def create_trackings_and_rests(user_id, query, response, tracking_note, tracking_review):
-#     """Given user input, creates trackings and restaurants"""
-
-#     query = query.split(',')
-#     info = get_rest_info(query)
-#     # Using separate function, gets all restaurant details from Google Places
-#     rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review = info
-#     # Unpacks all information into separate variables for use in db insertions below
-#     # rest_review = rest_review.encode('utf-8')
-#     current_time = datetime.now()
-#     # Current time for db insertions below
-#     match = get_match(query)
-#     # Gets a list of all restaurant objects that have a name that
-#     # matches the queried restaurant.
-#     if len(match) == 1:
-#     # Handles when there is one match for the query in the db.
-#         rest = match[0]
-#         # Isolates the single object in the match list
-#         all_trackings = get_all_trackings(user_id, rest.rest_id)
-#         # Gets a list of all tracking objects that 
-#         # have the user's user_id and the queried rest's rest_id
-#         if len(all_trackings) == 1:
-#         # Handles when there is already one tracking for the restaurant
-#             flash('This restaurant already exists in your To-eat List.')
-#         elif len(all_trackings) == 0:
-#         # Handles when there is no tracking for the restaurant
-#             if response == False:
-#                 # Handles if user has not been the restaurant
-#                 if len(tracking_note) == 0:
-#                     tracking_note = None
-#                     # Converts an empty tracking note to None for db consistency
-#                 create_tracking(user_id, rest.rest_id, False, tracking_note, None, current_time)
-#                 # Creates a new tracking object; inserts tracking into db 
-#                 flash('You have successfully added a restaurant.')
-#                 # Confirms update upon redirect
-#             elif response == True:
-#                 # Handles when a user has been to a restaurant
-#                 if len(tracking_review) == 0:
-#                     tracking_review = None
-#                     # Converts an empty tracking review to None for db consistency
-#                 create_tracking(user_id, rest.rest_id, True, None, tracking_review, current_time)
-#                 # Creates a new tracking object; insterts tracking into db
-#                 flash('You have successfully added a restaurant.')
-#                 # Confirms update upon redirect
-#     elif len(match) == 0:
-#     # Isolates the single object in the match list.
-#     # Handles when there are no matches for the query in the db.
-#     # Inserts into both restaurants table and trackings tables.
-#     # When there is no match in the restaurants table, there is necessarily
-#     # no tracking for that queried restaurant. 
-#         restaurant = create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review, current_time)
-#         # Creates a new restaurant object
-#         new_rest_id = restaurant.rest_id
-#         # Gets newly created rest_id for the tracking instantiations below
-#         if response == False:
-#             # Handles if the user has not been to a restaurant
-#             if len(tracking_note) == 0:
-#                 tracking_note = None
-#                 # Converts an empty tracking note to None for db consistency
-#             create_tracking(user_id, new_rest_id, False, tracking_note, None, current_time)
-#             # Creates a new tracking object; insterts tracking into db
-#             flash('You have successfully added a restaurant.')
-#             # Confirms update upon redirect
-#         elif response == True:
-#             # Handles if the user has been to a restaurant
-#             if len(tracking_review) == 0:
-#                 tracking_review = None
-#                 # Converts to an empty tracking review to None for db consistency
-#             create_tracking(user_id, restaurant.rest_id, True, None, tracking_review, current_time)
-#             # Creates new tracking object; inserts tracking into db
-#             flash('You have successfully added a restaurant.')
-
-#NEW - NEEDS TEST
 def get_all_trackings(user_id, rest_id):
 
     return db.session.query(Tracking).filter_by(user_id=user_id, rest_id=rest_id).all()
 
-#NEW - NEEDS TEST
+#FAILED
 def get_match(query):
 
     match = Restaurant.query.filter_by(rest_name=query[0]).all()
@@ -285,7 +210,6 @@ def pending_friends(user_id):
         id_and_name = fid, (other_friend.first_name.encode('utf-8') + ' ' + other_friend.last_name.encode('utf-8'))
         friend_id_names.append(id_and_name)
 
-    print friend_id_names
     return friend_id_names
 
 def accept_new_friend(accept_id, user_id):

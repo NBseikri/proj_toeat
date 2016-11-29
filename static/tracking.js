@@ -22,7 +22,7 @@ var lat = $('#latlng').attr('data-lat');
 var lng = $('#latlng').attr('data-lng');
  
 function initMap() {var restLocation = {lat: +lat, lng: +lng};
-    var map = new google.maps.Map(document.getElementById('map'), {zoom: 13, center: restLocation});
+    var map = new google.maps.Map(document.getElementById('map'), {zoom: 15, center: restLocation});
     var marker = new google.maps.Marker({position: restLocation, map: map});
 }
 
