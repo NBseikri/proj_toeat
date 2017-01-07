@@ -1,257 +1,119 @@
 {% extends 'base.html' %}
+
 {% block head %}
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed|Sofia" rel="stylesheet">
-    <style>
+    <link rel="stylesheet" href="/static/tracking.css">
 
-
-.navbar, .navbar-default .navbar-brand, .navbar-default .navbar-nav li a {
-    background: #FF6347;
-    border: none;
-    border-radius: 0;
-    color: #ffffff;
-    font-family: 'Sofia', sans-serif;
-    font-weight: 900;
-    font-size: 24px;
-    height: 40px;
-}
-
-#logout-btn {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-}
-.navbar-default .navbar-brand:hover, .navbar-default .navbar-nav li a:hover {
-  color: #cccccc;
-}
-
-.btn-default {
-  text-align: center;
-  background: #FF6347;
-  border: 0;
-  width: 700px;
-  height: 40px;
-  border-radius: 3px;
-  color: #ffffff;
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-h1 {
-  text-align: center;
-  font-family: 'Sofia', sans-serif;
-  font-weight: 900;
-  color: #FF6347;
-}
-
-h2 {
-  text-align: center;
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #FF6347;
-}
-
-#logout-btn2 {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-#myprof-btn {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.manage {
-  align: right;
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-}
- 
-#manage_entry {
-  text-align: center;
-  background: #FF6347;
-  border: 0;
-  width: 200px;
-  height: 30px;
-  border-radius: 3px;
-  color: #ffffff;
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease-in-out;
-}
-
-#update_review {
-  width: 400px; 
-  height: 50px;
-}
-
-.container {
-  display: inline-block;
-  height: 100%;
-  width: 100%;
-}
-
-.inline {
-  display: inline-block;
-  width: 50%;
-}
-
-#map {
-  height: 800px;
-       }
-
-#address {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #FF6347;
-}
-
-.user_details {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.restaurant_details {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.title {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #FF6347;
-}
-
-.rev {
-  border: 1px black;
-  border-radius: 3px;
-}
-
-</style>
 {% endblock %}
 
 {% block content %}
-{% if 'user_id' in session and session['user_id'] != None %}
-<!-- Navigation Bar -->
-<nav class="navbar navbar-default">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button"
-              class="navbar-toggle collapsed"
-              data-toggle="collapse"
-              data-target="#navbar"
-              aria-expanded="false"
-              aria-controls="navbar">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
+
+  <!-- Handles whether a user is logged in; Navbar -->
+  {% if 'user_id' in session and session['user_id'] != None %}
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
         <a class="navbar-brand" href="#">To-eat List</a>
-    </div>
-    <div id="navbar" class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-            <li><a id="logout-btn2" href="/logout">Logout</a></li>
-            <li><a id="myprof-btn" href="/profile/{{ session['user_id'] }}">My Profile</a></li>
-        </ul>
-    </div>
-  </div>
-</nav>
-<!-- Manage To-eat Listing -->
-<div class='manage'>
-  <p id='manage_entry'>Manage To-eat Listing</p>
-  <form action='/manage/<tracking_id>', method=['GET'], id='update_form'>
-  {% if tracking.visited %}
-    <input type="radio" name="update" value="Delete"> Remove from Your To-eat List <br>
-    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
-    <input type="submit" value="Submit"></form>
-  {% else %}
-    <input type="radio" name="update" value="True" id="update_visited"> Mark as Visited<br>
-    <input type="radio" name="update" value="Delete"> Remove from Your To-eat List<br>
-    <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
-      <div id="update_review">
-      Add a Review: <input id="up_tracking_review" type="text" name="up_tracking_review">
       </div>
-      <br>
-    <input type="submit" value="Submit"></form>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav"></ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a id="logout-btn2" href="/logout">Logout</a></li>
+          <li><a id="myprof-btn" href="/profile/{{ session['user_id'] }}">My Profile</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Manage To-eat listing -->
+  <div class='manage'>
+    <p id='manage_entry'>Manage To-eat Listing</p>
+    <form action='/manage/<tracking_id>', method=['GET'], id='update_form'>
+    {% if tracking.visited %}
+      <input type="radio" name="update" value="Delete"> Remove from Your To-eat List <br>
+      <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
+      <input type="submit" value="Submit"></form>
+    {% else %}
+      <input type="radio" name="update" value="True" id="update_visited"> Mark as Visited<br>
+      <input type="radio" name="update" value="Delete"> Remove from Your To-eat List<br>
+      <input type="hidden" name="tracking_id" value="{{ tracking.tracking_id }}">
+        <div id="update_review">
+          Add a Review: <input id="up_tracking_review" type="text" name="up_tracking_review">
+        </div><br>
+        <input type="submit" value="Submit"></form>
+    {% endif %}
+  </div>
+
+  <!-- Headers -->
+  <h1 id='rest_name'>{{ tracking.restaurant.rest_name }}</h1>
+  {% if tracking.visited %}
+  <h2 id='status'>You've visited this restaurant.</h2>
+  {% else %}
+  <h2 id='status'>This restaurant is on your To-eat List.</h2>
   {% endif %}
-</div>
-<!-- Headers -->
-<h1 id='rest_name'>{{ tracking.restaurant.rest_name }}</h1>
-{% if tracking.visited %}
-<h2 id='status'>You've visited this restaurant.</h2>
-{% else %}
-<h2 id='status'>This restaurant is on your To-eat List.</h2>
-{% endif %}
-<br>
-<br>
-<br>
+  <br><br><br>
 
-<!-- Map and Address -->
-<div class="container-fluid">
-<div class="row">
+  <!-- Tracking info -->
+  <div class="container-fluid">
+    <div class="row">
 
-  <div class='col-xs-12 col-md-6'>
+    <!-- Map and address -->
+    <div class='col-xs-12 col-md-6'>
       <div id='address'><span class="glyphicon glyphicon-map-marker"></span> {{ add_1 }}</div>
       <div class='col-xs-12' id='map'></div>
       <article id="latlng" data-lat="{{ tracking.restaurant.lat }}" 
       data-lng="{{ tracking.restaurant.lng}}"></article>
       <script src="https://maps.googleapis.com/maps/api/js?key={{ key }}"></script>
-  </div>
+    </div>
 
-<!-- Manage, User Details and Restaurant Details -->
-  <div class='col-xs-12 col-md-6'>
-    <div class='user_details'>
+    <!-- User note or review -->
+    <div class='col-xs-12 col-md-6'>
+      <div class='user_details'>
         {% if tracking.visited %}
           {% if tracking.tracking_review != None %}
             <p class='title' id='user_review'>What you thought of {{ tracking.restaurant.rest_name }}:</p>
             <p id='review_text'>"{{tracking.tracking_review}}"</p>
           {% endif %}
-      {% else %}
+        {% else %}
           {%if tracking.tracking_note != None %}
             <p class='title' id='user_note'>Your To-Eat List Note:</p>
             <p id='note_text'>"{{tracking.tracking_note}}"</p>
           {% endif %}
-      {% endif %}
-    </div>
+        {% endif %}
+      </div>
 
+    <!-- Restaurant details -->
     <div class='restaurant_details'>
       <p class='title'>Restaurant Details</p>
       {% if tracking.restaurant.price %}
-      <p id='price'> Price Level: {{ price }} out of $$$$</p>
+        <p id='price'> Price Level: {{ price }} out of $$$$</p>
       {% endif %}
       {% if tracking.restaurant.rating %}
-      <p id='google_user'> Google User Rating: {{ tracking.restaurant.rating }} out of 5.0</p>
+        <p id='google_user'> Google User Rating: {{ tracking.restaurant.rating }} out of 5.0</p>
       {% endif %}
       {% if all_reviews %}
-      <p id='google_text'> Google User Reviews:</p>
-          {% for rev in all_reviews %}
-            {% if rev|length > 0%}
-              <div class='rev'>"{{ rev }}"</div><br>
-            {% endif %}
-          {% endfor %}
+        <p id='google_text'> Google User Reviews:</p>
+        {% for rev in all_reviews %}
+          {% if rev|length > 0%}
+            <div class='rev'>"{{ rev }}"</div><br>
+          {% endif %}
+        {% endfor %}
       {% endif %}  
     </div>
+      </div>
+    </div>
   </div>
-  </div>
-</div>
-<!-- Has user login if there is no user_id in session. -->
+
 {% else %}
     <a id='login_link' href="/login">Please login.</a>
 {% endif %}
+
 {% endblock %}

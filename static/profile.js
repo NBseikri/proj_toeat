@@ -68,6 +68,33 @@ function toggleRestDiv() {$("#rest_list").toggle();}
 $("#list_header").on('click', toggleRestDiv);
 
 // Filter and Sort Divs
+// function showOrg(result) {
+//     var data = result.data;
+//     $("#result_div").empty();
+
+//     for (var i in data) {
+//         var photo = data[i]['photo'];
+//         var newPhotoHTML = ("<div class='col-md-4'><div class='rest_photo'><img src='" + photo + "'width='100' height='100'>");
+
+//         var id = data[i]['tracking_id'];
+//         var rest_name = data[i]['rest_name'];
+//         var newLink = ("<a href=/tracking/" + id + ">" + rest_name + "</a>");
+
+//         var visited = data[i]['visited'];
+//         if (visited === "On your To-eat List") {
+//         var newVisit = ("<p id='rep_visited' font-family='Roboto Condensed'>" + visited +" <span class='glyphicon glyphicon-unchecked'></p>");
+//         }
+//         else {
+//         var newVisit = ("<p id='rep_visited' font-family='Roboto Condensed'>" + visited +" <span class='glyphicon glyphicon-check'></p>");    
+//         }
+
+//     // var gridTwo = ("</div></div>");
+
+//         $("#result_div").append(newPhotoHTML, newLink, newVisit);
+
+//     }
+// }
+
 function showOrg(result) {
     var data = result.data;
     $("#original_rest").empty();

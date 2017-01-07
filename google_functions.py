@@ -12,7 +12,7 @@ import functions
 key = os.environ["G_PLACES_KEY"]
 
 def get_rest_info(query):
-    """Pulls Search and Detail info from Google Places based on a query"""
+    """Pulls Search, Detail and Photo info from Google Places based on a query"""
 
     search_url = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
     details_url = 'https://maps.googleapis.com/maps/api/place/details/json'
@@ -90,9 +90,9 @@ def get_rest_info(query):
         city = None
 
     # Business hours from details
-    bus_hours = d_results.get('weekday_text', None)
     # Used .get() here because weekday_text appears to be the only Place Search
     # result that isn't always a key in the dictionary
+    bus_hours = d_results.get('weekday_text', None)
     if bus_hours is None:
         bus_hours = None
 
@@ -111,5 +111,4 @@ def get_rest_info(query):
     else:
         all_reviews = None
     
-    print rest_name, city, address, lat, lng, photo_url, placeid, price, rating, bus_hours, all_reviews
     return rest_name, city, address, lat, lng, photo_url, placeid, price, rating, bus_hours, all_reviews

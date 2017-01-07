@@ -7,7 +7,8 @@ from flask.ext.bcrypt import Bcrypt
 import random
 
 def create_user(username, email, encrypted_pw, first_name, last_name, ucreated_at):
-    """Creates user instance""" 
+    """Creates user instance in db"""
+
     user = User(username=username,
         email=email,
         password=encrypted_pw,
@@ -19,6 +20,8 @@ def create_user(username, email, encrypted_pw, first_name, last_name, ucreated_a
     return user
 
 def create_tracking(user_id, rest_id, visited, tracking_note, tracking_review, tcreated_at):
+    """Creates tracking instance in db"""
+
     tracking = Tracking(user_id=user_id,
         rest_id=rest_id,
         visited=visited,
@@ -31,6 +34,8 @@ def create_tracking(user_id, rest_id, visited, tracking_note, tracking_review, t
 
 #NEW - NEEDS TEST
 def create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price, rating, bus_hours, rest_review, current_time):
+    """Creates restaurant instance in db"""
+
     restaurant = Restaurant(rest_name=rest_name, 
                                 city=city, 
                                 address=address, 
@@ -48,17 +53,19 @@ def create_restaurant(rest_name, city, address, lat, lng, photo, placeid, price,
     return restaurant
 
 def get_all_trackings(user_id, rest_id):
+    """Returns a user's trackings by user_id and rest_id"""
 
     return db.session.query(Tracking).filter_by(user_id=user_id, rest_id=rest_id).all()
 
 #FAILED
 def get_match(query):
+    """Given a user's autocomplete query, returns a matching restaurant in the restaurants table"""
 
     match = Restaurant.query.filter_by(rest_name=query[0]).all()
     return match
 
 def filter_trackings(user_id, filter_by):
-    """Given user input, returns filtered trackings as JSON"""
+    """Returns filtered trackings as JSON by user_id and user input"""
 
     if filter_by == "visited":
         trackings = Tracking.query.filter(Tracking.user_id==user_id, Tracking.visited==True).all()
@@ -87,7 +94,8 @@ def filter_trackings(user_id, filter_by):
     return tracking_json
 
 def tracking_cities(user_id):
-    """Given a user_id, returns a list of cities for which a user is tracking restaurants"""
+    """Returns a list of cities in which a user is tracking restaurants by user_id"""
+
     all_cities = db.session.query(Restaurant.city).join(Tracking).filter(Tracking.user_id==user_id).group_by(Restaurant.city).all()
     cities = []
     for city in all_cities:
@@ -96,7 +104,7 @@ def tracking_cities(user_id):
     return cities
 
 def sort_trackings(user_id, sort_by):
-    """Given user input, returns sorted trackings as JSON"""
+    """Returns sorted trackings as JSON by user_id and user input"""
 
     if sort_by == "low_price":
         trackings = Tracking.query.join(Restaurant).filter(Tracking.user_id==user_id).order_by(Restaurant.price).all()
@@ -130,7 +138,8 @@ def sort_trackings(user_id, sort_by):
     return tracking_json
 
 def format_add(user_id):
-    """Returns list of formatted addresses for restaurants"""
+    """Returns list of formatted addresses for restaurants for a user's tracked restaurants by user_id"""
+
     user = User.query.get(user_id)
     rest_add = []
     for ut in user.trackings:
@@ -148,7 +157,7 @@ def format_add(user_id):
     return rest_add
 
 def find_friends(user_id):
-    """Given a user_id, returns a list of tuples with a friend's user_id and full name"""
+    """Returns a list of tuples with a friend's user_id and full name by the user's user_id"""
 
     all_friends = Friend.query.filter(Friend.status==2).all()
     
@@ -168,8 +177,7 @@ def find_friends(user_id):
     return friend_id_names
 
 def suggest_friends(passed_user_id):
-    """Given a user_id, returns a list of tuples with a suggested friend's user_id and full name"""
-    # Returns x for y (the passed in info) #
+    """Returns a list of tuples with a suggested friend's user_id and full name by user's user_id"""
 
     all_friends = Friend.query.all()
     
@@ -194,7 +202,7 @@ def suggest_friends(passed_user_id):
         return sugg_id_names
 
 def pending_friends(user_id):
-    """Given a user_id, returns a list of tuples with a pending friend's user_id and full name"""
+    """Returns a list of tuples with a pending friend's user_id and full name by user's user_id"""
 
     all_friends = db.session.query(Friend).filter_by(friend_two=user_id, status=1).all()
     
@@ -213,16 +221,14 @@ def pending_friends(user_id):
     return friend_id_names
 
 def accept_new_friend(accept_id, user_id):
-    # friend.accept_new_friend(accept_id)
-    # create a method on the Friend class instead of imported functions
-    """Accept a friend request by changing the status from pending (1) to confirmed (2)"""
+    """Accepts a friend request by changing the friend status from pending (1) to confirmed (2) on friend obj"""
 
     friendship = db.session.query(Friend).filter_by(friend_one=accept_id, friend_two=user_id, status=1).all()
     friendship[0].status = 2
     db.session.commit()
 
 def request_new_friend(user_id, request_id):
-    """Accept a friend request by creating a friend object with a pending status (1)"""
+    """Creates a friend request by creating a friend object with a pending status (1)"""
     current_time = datetime.now()
     friend = Friend(friend_one=user_id, 
                                 friend_two=request_id, 
@@ -232,6 +238,7 @@ def request_new_friend(user_id, request_id):
     db.session.commit()
 
 def delete_friend(user_id, friend_id):
+    """Deletes friend by removing friend object from the db"""
 
     friendship = db.session.query(Friend).filter_by(friend_one=friend_id, friend_two=user_id).first() or db.session.query(Friend).filter_by(friend_one=user_id, friend_two=friend_id).first()
 

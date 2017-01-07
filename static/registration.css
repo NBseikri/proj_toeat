@@ -37,13 +37,6 @@ h1 {
   color: #FF6347;
 }
 
-a {
-  text-align: center;
-  font-family: 'Sofia', sans-serif;
-  font-weight: 900;
-  color: #FF6347;
-}
-
 form {
   text-align: center;
 }
@@ -55,9 +48,25 @@ label {
   font-weight: 900;
 }
 
+input[type="text"] {
+  width: 300px;
+  padding: 0px 0px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid #FF6347;
+  border-radius: 0;
+  outline: none;
+  color: #FF6347;
+  font-size: 16px;
+  text-align: center;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 500;
+  margin: 25px;
+}
+
 input[type="email"] {
   width: 300px;
-  padding: 10px 0px;
+  padding: 0px 0px;
   background: transparent;
   border: 0;
   border-bottom: 2px solid #FF6347;
